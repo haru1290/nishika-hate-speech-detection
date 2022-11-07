@@ -76,6 +76,8 @@ def train(args):
             fp16=True,
             remove_unused_columns=False,
             load_best_model_at_end=True,
+            metric_for_best_model="f1_score",
+            greater_is_better=True,
             report_to="none",
             seed=args.seed,
         )
@@ -87,7 +89,7 @@ def train(args):
             eval_dataset=valid_dataset,
             compute_metrics=compute_metrics,
             callbacks=[EarlyStoppingCallback(
-                early_stopping_patience=3,
+                early_stopping_patience=args.patience,
             )],
         )
 
@@ -102,10 +104,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max_length", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--max_length", type=float, default=-1)
+    parser.add_argument("--patience", type=int, default=3)
 
     parser.add_argument("--save_steps", type=int, default=1e6)
     parser.add_argument("--save_total_limit", type=int, default=1)
