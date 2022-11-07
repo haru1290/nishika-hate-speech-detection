@@ -70,11 +70,12 @@ def train(args):
             num_train_epochs=args.epochs,
             log_level="critical",
             logging_strategy="epoch",
-            save_strategy="steps",
+            save_strategy="epoch",
             save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             fp16=True,
             remove_unused_columns=False,
+            load_best_model_at_end=True,
             report_to="none",
             seed=args.seed,
         )
@@ -85,7 +86,9 @@ def train(args):
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
             compute_metrics=compute_metrics,
-            callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
+            callbacks=[EarlyStoppingCallback(
+                early_stopping_patience=3,
+            )],
         )
 
         trainer.train()
