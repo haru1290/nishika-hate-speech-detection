@@ -1,12 +1,12 @@
 import os
-import random
-import numpy as np
-import argparse
+import pandas as pd
 import torch
+import torch.nn as nn
+import argparse
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification, EarlyStoppingCallback
+from transformers import AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
 from tqdm import tqdm
 from load_data import *
 
@@ -48,13 +48,13 @@ def train(args):
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
-        device= torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
         model.to(device)
 
         trainer_args = TrainingArguments(
-            output_dir=f"./data/models/kfold_{str(index)}_{args.model_name}",
+            output_dir=f"./data/models/kfold_{str(index)}",
             overwrite_output_dir=True,
             do_train=True,
             do_eval=True,
@@ -68,13 +68,12 @@ def train(args):
             save_strategy="epoch",
             save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
+            seed=args.seed,
             fp16=True,
             remove_unused_columns=False,
             load_best_model_at_end=True,
             metric_for_best_model="f1_score",
-            greater_is_better=True,
             report_to="none",
-            seed=args.seed,
         )
         trainer = Trainer(
             model=model,
@@ -89,7 +88,6 @@ def train(args):
         )
 
         trainer.train()
-        trainer.save_model()
 
 
 def main(args):
@@ -103,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--patience", type=int, default=3)
 
     parser.add_argument("--save_steps", type=int, default=1e6)
