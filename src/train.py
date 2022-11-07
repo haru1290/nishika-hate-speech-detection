@@ -6,19 +6,15 @@ import torch
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import (
-    AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification, EarlyStoppingCallback,
-)
+from transformers import AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification, EarlyStoppingCallback
 from tqdm import tqdm
 from load_data import *
 
 
 def seed_everything(seed: int):    
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
 
@@ -93,6 +89,7 @@ def train(args):
         )
 
         trainer.train()
+        trainer.save_model()
 
 
 def main(args):
