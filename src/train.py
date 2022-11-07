@@ -1,52 +1,17 @@
 import os
 import random
-from pathlib import Path
-
-import string
-import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score
-
+import numpy as np
+import argparse
 import torch
-from torch.utils.data import Dataset
 
-import transformers
-from transformers import (
-    AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification,
-)
+from sklearn.metrics import f1_score
+from sklearn.model_selection import  StratifiedKFold
+from transformers import AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification
+from tqdm import tqdm
+from load_data import *
 
-SEED = 42
-DATA_DIR = Path("./data")
-
-
-class HateSpeechDataset(Dataset):
-    def __init__(self, X, y=None):
-        self.X = X
-        self.y = y
-
-    def __len__(self):
-        return len(self.X)
-
-    def __getitem__(self, index):
-        input = {
-            "input_ids": self.X[index]["input_ids"],
-            "attention_mask": self.X[index]["attention_mask"],
-        }
-
-        if self.y is not None:
-            input["label"] = self.y[index]
-
-        return input
-
-
-def compute_metrics(p: EvalPrediction):
-    preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
-    preds = np.argmax(preds, axis=1)
-    result = f1_score(p.label_ids, preds)
-    return {"f1_score":result}
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def seed_everything(seed: int):    
@@ -59,66 +24,84 @@ def seed_everything(seed: int):
     torch.backends.cudnn.benchmark = True
 
 
-def main():
-    train_valid_df = pd.read_csv(DATA_DIR/"train.csv")
-    test_df = pd.read_csv(DATA_DIR/"test.csv")
-    sub_df = pd.read_csv(DATA_DIR/"sample_submission.csv")
-
-    train_df, valid_df = train_test_split(train_valid_df, test_size=0.1, stratify=train_valid_df["label"], random_state=SEED)
-
-    train_valid_df['text'].str.replace('[{}]'.format(string.punctuation), '')
-    test_df['text'].str.replace('[{}]'.format(string.punctuation), '')
-
-    config = {
-        "model_name":"cl-tohoku/bert-base-japanese-whole-word-masking",
-        "max_length":-1,
-        "train_epoch":3,
-        "lr":3e-5,
+def compute_metrics(p: EvalPrediction):
+    preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
+    preds = np.argmax(preds, axis=1)
+    f1 = f1_score(p.label_ids, preds)
+    return {
+        "f1_score": f1,
     }
-    tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
-    model = AutoModelForSequenceClassification.from_pretrained(config["model_name"])
 
-    train_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(train_df["text"])]
-    train_dataset = HateSpeechDataset(train_X, train_df["label"].tolist())
-    valid_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(valid_df["text"])]
-    valid_dataset = HateSpeechDataset(valid_X, valid_df["label"].tolist())
-    test_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(test_df["text"])]
-    test_dataset = HateSpeechDataset(test_X)
 
-    trainer_args = TrainingArguments(
-        seed=SEED,
-        output_dir=".",
-        overwrite_output_dir=True,
-        do_train=True,
-        do_eval=True,
-        evaluation_strategy="epoch",
-        logging_strategy="epoch",
-        save_steps=1e6,
-        log_level="critical",
-        num_train_epochs=config["train_epoch"],
-        learning_rate=config["lr"],
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=12,
-        save_total_limit=1,
-        fp16=True,
-        remove_unused_columns=False,
-        report_to="none"
-    )
-    trainer = Trainer(
-        model=model,
-        args=trainer_args,
-        tokenizer=tokenizer,
-        train_dataset=train_dataset,
-        eval_dataset=valid_dataset,
-        compute_metrics=compute_metrics,
-    )
-    trainer.train()
+def train(args):
+    seed_everything(args.seed)
 
-    test_preds = trainer.predict(test_dataset)
-    sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
-    sub_df.to_csv(DATA_DIR/"output/sub.csv", index=False)
+    train_valid_df = load_data("./data/train.csv")
+
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.seed)
+    for index, (train_index, valid_index) in enumerate(skf.split(train_valid_df["text"], train_valid_df["label"])):
+        X_train = train_valid_df["text"].iloc[train_index]
+        X_valid = train_valid_df["text"].iloc[valid_index]
+        y_train = train_valid_df["label"].iloc[train_index]
+        y_valid = train_valid_df["label"].iloc[valid_index]
+
+        X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in tqdm(X_train)]
+        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in tqdm(X_valid)]
+
+        train_dataset = HateSpeechDataset(X_train, y_train.tolist())
+        valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
+
+        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
+        model.to(DEVICE)
+
+        trainer_args = TrainingArguments(
+            seed=args.seed,
+            output_dir=f"./data/models/kfold_{str(index)}_{args.model_name}",
+            overwrite_output_dir=True,
+            do_train=True,
+            do_eval=True,
+            evaluation_strategy="epoch",
+            logging_strategy="epoch",
+            save_steps=args.save_steps,
+            log_level="critical",
+            num_train_epochs=args.epochs,
+            learning_rate=args.learning_rate,
+            per_device_train_batch_size=args.batch_size,
+            per_device_eval_batch_size=args.batch_size,
+            save_total_limit=args.save_total_limit,
+            fp16=True,
+            remove_unused_columns=False,
+            report_to="none"
+        )
+        trainer = Trainer(
+            model=model,
+            args=trainer_args,
+            tokenizer=tokenizer,
+            train_dataset=train_dataset,
+            eval_dataset=valid_dataset,
+            compute_metrics=compute_metrics,
+        )
+        
+        trainer.train()
+
+
+def main(args):
+    train(args)
 
 
 if __name__ == "__main__":
-    seed_everything(SEED)
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--learning_rate", type=float, default=3e-5)
+    parser.add_argument("--max_length", type=float, default=-1)
+
+    parser.add_argument("--save_steps", type=int, default=1e6)
+    parser.add_argument("--save_total_limit", type=int, default=1)
+    args = parser.parse_args()
+    
+    main(args)
