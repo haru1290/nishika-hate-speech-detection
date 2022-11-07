@@ -1,12 +1,11 @@
 import os
 import random
-import pandas as pd
 import numpy as np
 import argparse
 import torch
 
 from sklearn.metrics import f1_score
-from sklearn.model_selection import  StratifiedKFold
+from sklearn.model_selection import StratifiedKFold
 from transformers import (
     AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification, EarlyStoppingCallback,
 )
