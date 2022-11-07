@@ -11,8 +11,6 @@ from transformers import AutoTokenizer, EvalPrediction, Trainer, TrainingArgumen
 from tqdm import tqdm
 from load_data import *
 
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 def seed_everything(seed: int):    
     random.seed(seed)
@@ -53,27 +51,30 @@ def train(args):
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
+        device= torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
-        model.to(DEVICE)
+        model.to(device)
 
         trainer_args = TrainingArguments(
-            seed=args.seed,
             output_dir=f"./data/models/kfold_{str(index)}_{args.model_name}",
             overwrite_output_dir=True,
             do_train=True,
             do_eval=True,
             evaluation_strategy="epoch",
-            logging_strategy="epoch",
-            save_steps=args.save_steps,
-            log_level="critical",
-            num_train_epochs=args.epochs,
-            learning_rate=args.learning_rate,
             per_device_train_batch_size=args.batch_size,
             per_device_eval_batch_size=args.batch_size,
+            learning_rate=args.learning_rate,
+            num_train_epochs=args.epochs,
+            log_level="critical",
+            logging_strategy="epoch",
+            save_strategy="epoch",
+            save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             fp16=True,
             remove_unused_columns=False,
-            report_to="none"
+            report_to="none",
+            seed=args.seed,
         )
         trainer = Trainer(
             model=model,
