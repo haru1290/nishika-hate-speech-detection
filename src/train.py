@@ -7,7 +7,9 @@ import torch
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import  StratifiedKFold
-from transformers import AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification
+from transformers import (
+    AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification, EarlyStoppingCallback,
+)
 from tqdm import tqdm
 from load_data import *
 
@@ -68,7 +70,7 @@ def train(args):
             num_train_epochs=args.epochs,
             log_level="critical",
             logging_strategy="epoch",
-            save_strategy="epoch",
+            save_strategy="steps",
             save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             fp16=True,
@@ -83,8 +85,9 @@ def train(args):
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
             compute_metrics=compute_metrics,
+            callbacks=[EarlyStoppingCallback(early_stopping_patience=3)],
         )
-        
+
         trainer.train()
 
 
@@ -98,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
-    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--max_length", type=float, default=-1)
 
     parser.add_argument("--save_steps", type=int, default=1e6)
