@@ -2,6 +2,7 @@ import os
 import random
 from pathlib import Path
 
+import string
 import numpy as np
 import pandas as pd
 from tqdm.auto import tqdm
@@ -14,15 +15,14 @@ from torch.utils.data import Dataset
 
 import transformers
 from transformers import (
-    AutoModel, AutoTokenizer, EvalPrediction, Trainer, 
-    TrainingArguments, AutoModelForSequenceClassification,
+    AutoTokenizer, EvalPrediction, Trainer, TrainingArguments, AutoModelForSequenceClassification,
 )
 
 SEED = 42
 DATA_DIR = Path("./data")
 
 
-class CreateDataset(Dataset):
+class HateSpeechDataset(Dataset):
     def __init__(self, X, y=None):
         self.X = X
         self.y = y
@@ -42,6 +42,13 @@ class CreateDataset(Dataset):
         return input
 
 
+def compute_metrics(p: EvalPrediction):
+    preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
+    preds = np.argmax(preds, axis=1)
+    result = f1_score(p.label_ids, preds)
+    return {"f1_score":result}
+
+
 def seed_everything(seed: int):    
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -52,13 +59,6 @@ def seed_everything(seed: int):
     torch.backends.cudnn.benchmark = True
 
 
-def compute_metrics(p: EvalPrediction):
-    preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
-    preds = np.argmax(preds, axis=1)
-    result = f1_score(p.label_ids, preds)
-    return {"f1_score":result}
-
-
 def main():
     train_valid_df = pd.read_csv(DATA_DIR/"train.csv")
     test_df = pd.read_csv(DATA_DIR/"test.csv")
@@ -66,21 +66,24 @@ def main():
 
     train_df, valid_df = train_test_split(train_valid_df, test_size=0.1, stratify=train_valid_df["label"], random_state=SEED)
 
-    cfg = {
+    train_valid_df['text'].str.replace('[{}]'.format(string.punctuation), '')
+    test_df['text'].str.replace('[{}]'.format(string.punctuation), '')
+
+    config = {
         "model_name":"cl-tohoku/bert-base-japanese-whole-word-masking",
         "max_length":-1,
         "train_epoch":3,
         "lr":3e-5,
     }
-    tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])
-    model = AutoModelForSequenceClassification.from_pretrained(cfg["model_name"])
+    tokenizer = AutoTokenizer.from_pretrained(config["model_name"])
+    model = AutoModelForSequenceClassification.from_pretrained(config["model_name"])
 
-    train_X = [tokenizer(text, padding="max_length", max_length=cfg["max_length"], truncation=True) for text in tqdm(train_df["text"])]
-    train_dataset = CreateDataset(train_X, train_df["label"].tolist())
-    valid_X = [tokenizer(text, padding="max_length", max_length=cfg["max_length"], truncation=True) for text in tqdm(valid_df["text"])]
-    valid_dataset = CreateDataset(valid_X, valid_df["label"].tolist())
-    test_X = [tokenizer(text, padding="max_length", max_length=cfg["max_length"], truncation=True) for text in tqdm(test_df["text"])]
-    test_dataset = CreateDataset(test_X)
+    train_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(train_df["text"])]
+    train_dataset = HateSpeechDataset(train_X, train_df["label"].tolist())
+    valid_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(valid_df["text"])]
+    valid_dataset = HateSpeechDataset(valid_X, valid_df["label"].tolist())
+    test_X = [tokenizer(text, padding="max_length", max_length=config["max_length"], truncation=True) for text in tqdm(test_df["text"])]
+    test_dataset = HateSpeechDataset(test_X)
 
     trainer_args = TrainingArguments(
         seed=SEED,
@@ -92,8 +95,8 @@ def main():
         logging_strategy="epoch",
         save_steps=1e6,
         log_level="critical",
-        num_train_epochs=cfg["train_epoch"],
-        learning_rate=cfg["lr"],
+        num_train_epochs=config["train_epoch"],
+        learning_rate=config["lr"],
         per_device_train_batch_size=8,
         per_device_eval_batch_size=12,
         save_total_limit=1,
