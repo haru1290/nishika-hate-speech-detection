@@ -93,7 +93,7 @@ def train(args):
         X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
         test_preds = trainer.predict(HateSpeechDataset(X_test))
         sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
-        sub_df.to_csv(f"./data/outputs/sub_{str(i)}.csv", index=False)
+        sub_df.to_csv(f"./data/outputs/sub_{str(index)}.csv", index=False)
 
 
 def main(args):
