@@ -7,7 +7,6 @@ import argparse
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
 from transformers import AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
-from tqdm import tqdm
 from load_data import *
 
 
@@ -42,8 +41,8 @@ def train(args):
         y_train = train_valid_df["label"].iloc[train_index]
         y_valid = train_valid_df["label"].iloc[valid_index]
 
-        X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in tqdm(X_train)]
-        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in tqdm(X_valid)]
+        X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
 
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
@@ -71,6 +70,7 @@ def train(args):
             metric_for_best_model=args.metric_for_best_model,
             report_to=args.report_to,
         )
+
         trainer = Trainer(
             model=model,
             args=training_args,
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--save_total_limit", type=int, default=2)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)
     parser.add_argument("--load_best_model_at_end", type=bool, default=True)
