@@ -51,7 +51,7 @@ def train(args):
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
 
         training_args = TrainingArguments(
-            output_dir=f"./data/models/kfold_{str(index)}/bert-base-japanese",
+            output_dir=f"./data/models/kfold_{str(index)}/",
             overwrite_output_dir=args.overwrite_output_dir,
             do_train=args.do_train,
             do_eval=args.do_eval,
@@ -63,7 +63,6 @@ def train(args):
             log_level=args.log_level,
             logging_strategy=args.logging_strategy,
             save_strategy=args.save_strategy,
-            # save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
             fp16=args.fp16,
@@ -100,7 +99,6 @@ if __name__ == "__main__":
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_steps", type=int, default=1)
     parser.add_argument("--save_total_limit", type=int, default=1)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)
@@ -113,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_length", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     
