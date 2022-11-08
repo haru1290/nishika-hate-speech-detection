@@ -8,7 +8,9 @@ import argparse
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback
+from transformers import (
+    AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback, AdamW,
+)
 from load_data import *
 
 
@@ -40,7 +42,7 @@ def train(args):
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.seed)
+    skf = StratifiedKFold(n_splits=15, shuffle=True, random_state=args.seed)
     for index, (train_index, valid_index) in enumerate(skf.split(train_df["text"], train_df["label"])):
         X_train = train_df["text"].iloc[train_index]
         X_valid = train_df["text"].iloc[valid_index]
@@ -97,7 +99,7 @@ def train(args):
 
 
 def main(args):
-        train(args)
+    train(args)
 
 
 if __name__ == "__main__":
@@ -120,9 +122,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
     parser.add_argument("--max_length", type=float, default=-1)
-    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
-    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--epochs", type=int, default=3)
     args = parser.parse_args()
     
     main(args)
