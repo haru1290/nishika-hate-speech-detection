@@ -63,7 +63,7 @@ def train(args):
             log_level=args.log_level,
             logging_strategy=args.logging_strategy,
             save_strategy=args.save_strategy,
-            save_steps=args.save_steps,
+            # save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
             fp16=args.fp16,
