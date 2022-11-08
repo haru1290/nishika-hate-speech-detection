@@ -84,6 +84,7 @@ def train(args):
         )
 
         trainer.train()
+        trainer.save_model()
 
 
 def main(args):
@@ -99,7 +100,8 @@ if __name__ == "__main__":
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=2)
+    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)
     parser.add_argument("--load_best_model_at_end", type=bool, default=True)
@@ -112,7 +114,6 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     
     main(args)
