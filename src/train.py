@@ -1,4 +1,6 @@
 import os
+import random
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -10,10 +12,12 @@ from transformers import AutoTokenizer, EvalPrediction, AutoModelForSequenceClas
 from load_data import *
 
 
-def seed_everything(seed: int):    
+def seed_everything(seed: int):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
 
@@ -30,21 +34,22 @@ def compute_metrics(p: EvalPrediction):
 def train(args):
     seed_everything(args.seed)
 
-    train_valid_df = load_data("./data/train.csv")
+    train_df = load_data("./data/train.csv")
+    test_df = load_data("./data/test.csv")
+    sub_df = load_data("./data/sample_submission.csv")
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=args.seed)
-    for index, (train_index, valid_index) in enumerate(skf.split(train_valid_df["text"], train_valid_df["label"])):
-        X_train = train_valid_df["text"].iloc[train_index]
-        X_valid = train_valid_df["text"].iloc[valid_index]
-        y_train = train_valid_df["label"].iloc[train_index]
-        y_valid = train_valid_df["label"].iloc[valid_index]
+    for index, (train_index, valid_index) in enumerate(skf.split(train_df["text"], train_df["label"])):
+        X_train = train_df["text"].iloc[train_index]
+        X_valid = train_df["text"].iloc[valid_index]
+        y_train = train_df["label"].iloc[train_index]
+        y_valid = train_df["label"].iloc[valid_index]
 
         X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
-        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
-
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
+        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
@@ -84,11 +89,14 @@ def train(args):
         )
 
         trainer.train()
-        trainer.save_model()
+
+        X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
+        test_preds = trainer.predict(HateSpeechDataset(X_test))
+        sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
 
 
 def main(args):
-    train(args)
+        train(args)
 
 
 if __name__ == "__main__":
@@ -109,9 +117,9 @@ if __name__ == "__main__":
     parser.add_argument("--report_to", type=str, default="none")
     parser.add_argument("--patience", type=int, default=3)
 
-    parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
+    parser.add_argument("--model_name", type=str, default="bandainamco-mirai/distilbert-base-japanese")
     parser.add_argument("--max_length", type=float, default=-1)
-    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
     parser.add_argument("--epochs", type=int, default=100)
     args = parser.parse_args()
