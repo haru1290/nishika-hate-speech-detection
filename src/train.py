@@ -93,6 +93,7 @@ def train(args):
         X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
         test_preds = trainer.predict(HateSpeechDataset(X_test))
         sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
+        sub_df.to_csv(f"./data/outputs/sub_{str(i)}.csv", index=False)
 
 
 def main(args):
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument("--report_to", type=str, default="none")
     parser.add_argument("--patience", type=int, default=3)
 
-    parser.add_argument("--model_name", type=str, default="bandainamco-mirai/distilbert-base-japanese")
+    parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
     parser.add_argument("--max_length", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
