@@ -48,36 +48,33 @@ def train(args):
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
-        model.to(device)
 
-        trainer_args = TrainingArguments(
-            output_dir=f"./data/models/kfold_{str(index)}",
-            overwrite_output_dir=True,
-            do_train=True,
-            do_eval=True,
-            evaluation_strategy="epoch",
+        training_args = TrainingArguments(
+            output_dir=f"./data/models/kfold_{str(index)}/bert-base-japanese",
+            overwrite_output_dir=args.overwrite_output_dir,
+            do_train=args.do_train,
+            do_eval=args.do_eval,
+            evaluation_strategy=args.evaluation_strategy,
             per_device_train_batch_size=args.batch_size,
             per_device_eval_batch_size=args.batch_size,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
-            log_level="critical",
-            logging_strategy="epoch",
-            save_strategy="epoch",
+            log_level=args.log_level,
+            logging_strategy=args.logging_strategy,
+            save_strategy=args.save_strategy,
             save_steps=args.save_steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
-            fp16=True,
-            remove_unused_columns=False,
-            load_best_model_at_end=True,
-            metric_for_best_model="f1_score",
-            report_to="none",
+            fp16=args.fp16,
+            remove_unused_columns=args.remove_unused_columns,
+            load_best_model_at_end=args.load_best_model_at_end,
+            metric_for_best_model=args.metric_for_best_model,
+            report_to=args.report_to,
         )
         trainer = Trainer(
             model=model,
-            args=trainer_args,
+            args=training_args,
             tokenizer=tokenizer,
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
@@ -96,16 +93,28 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--overwrite_output_dir", type=bool, default=True)
+    parser.add_argument("--do_train", type=bool, default=True)
+    parser.add_argument("--do_eval", type=bool, default=True)
+    parser.add_argument("--evaluation_strategy", type=str, default="epoch")
+    parser.add_argument("--log_level", type=str, default="critical")
+    parser.add_argument("--logging_strategy", type=str, default="epoch")
+    parser.add_argument("--save_strategy", type=str, default="epoch")
+    parser.add_argument("--save_steps", type=int, default=1)
+    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--fp16", type=bool, default=True)
+    parser.add_argument("--remove_unused_columns", type=bool, default=False)
+    parser.add_argument("--load_best_model_at_end", type=bool, default=True)
+    parser.add_argument("--metric_for_best_model", type=str, default="f1_score")
+    parser.add_argument("--report_to", type=str, default="none")
+    parser.add_argument("--patience", type=int, default=3)
+
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
-    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_length", type=float, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
     parser.add_argument("--epochs", type=int, default=1)
-    parser.add_argument("--patience", type=int, default=3)
-
-    parser.add_argument("--save_steps", type=int, default=1e6)
-    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
     
     main(args)
