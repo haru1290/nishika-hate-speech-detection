@@ -13,6 +13,7 @@
 #     --batch_size 16 \
 #     --epochs 100 \
 
+# k=20 (LB: ?)
 python src/train.py \
     --model_name megagonlabs/transformers-ud-japanese-electra-base-discriminator \
     --batch_size 16 \
