@@ -12,7 +12,7 @@ def main():
         total += preds[i]["label"]
 
     preds[0]["label"] = round(total/k).astype(int)
-    preds[0].to_csv("./data/outputs/sub.csv", index=None)
+    preds[0].to_csv("./data/submission/sub.csv", index=None)
 
 
 if __name__ == "__main__":

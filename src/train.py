@@ -37,9 +37,9 @@ def compute_metrics(p: EvalPrediction):
 def train(args):
     seed_everything(args.seed)
 
-    train_df = load_data("./data/train.csv")
-    test_df = load_data("./data/test.csv")
-    sub_df = load_data("./data/sample_submission.csv")
+    train_df = load_data("./data/input/train.csv")
+    test_df = load_data("./data/input/test.csv")
+    sub_df = load_data("./data/input/sample_submission.csv")
 
     # tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     tokenizer = ElectraSudachipyTokenizer.from_pretrained(args.model_name)
@@ -59,7 +59,7 @@ def train(args):
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
 
         training_args = TrainingArguments(
-            output_dir=f"./data/models/kfold_{str(index)}/",
+            output_dir=f"./models/kfold_{str(index)}/",
             overwrite_output_dir=args.overwrite_output_dir,
             do_train=args.do_train,
             do_eval=args.do_eval,
