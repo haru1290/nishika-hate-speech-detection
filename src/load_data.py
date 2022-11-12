@@ -17,7 +17,7 @@ class HateSpeechDataset(Dataset):
         }
 
         if self.y is not None:
-            input["label"] = self.y[index]
+            input["labels"] = self.y[index]
 
         return input
 

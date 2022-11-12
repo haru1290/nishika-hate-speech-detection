@@ -42,7 +42,7 @@ def train(args):
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    skf = StratifiedKFold(n_splits=15, shuffle=True, random_state=args.seed)
+    skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
     for index, (train_index, valid_index) in enumerate(skf.split(train_df["text"], train_df["label"])):
         X_train = train_df["text"].iloc[train_index]
         X_valid = train_df["text"].iloc[valid_index]
@@ -59,8 +59,6 @@ def train(args):
         training_args = TrainingArguments(
             output_dir=f"./models/kfold_{str(index)}/",
             overwrite_output_dir=args.overwrite_output_dir,
-            do_train=args.do_train,
-            do_eval=args.do_eval,
             evaluation_strategy=args.evaluation_strategy,
             per_device_train_batch_size=args.batch_size,
             per_device_eval_batch_size=args.batch_size,
@@ -75,6 +73,7 @@ def train(args):
             remove_unused_columns=args.remove_unused_columns,
             load_best_model_at_end=args.load_best_model_at_end,
             metric_for_best_model=args.metric_for_best_model,
+            label_smoothing_factor=args.label_smoothing_factor,
             report_to=args.report_to,
         )
 
@@ -86,7 +85,7 @@ def train(args):
             eval_dataset=valid_dataset,
             compute_metrics=compute_metrics,
             callbacks=[EarlyStoppingCallback(
-                early_stopping_patience=args.patience,
+                early_stopping_patience=args.early_stopping_patience,
             )],
         )
 
@@ -105,8 +104,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--overwrite_output_dir", type=bool, default=True)
-    parser.add_argument("--do_train", type=bool, default=True)
-    parser.add_argument("--do_eval", type=bool, default=True)
     parser.add_argument("--evaluation_strategy", type=str, default="epoch")
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
@@ -117,8 +114,10 @@ if __name__ == "__main__":
     parser.add_argument("--remove_unused_columns", type=bool, default=False)
     parser.add_argument("--load_best_model_at_end", type=bool, default=True)
     parser.add_argument("--metric_for_best_model", type=str, default="f1_score")
+    parser.add_argument("--label_smoothing_factor", type=float, default=0.2)
     parser.add_argument("--report_to", type=str, default="none")
-    parser.add_argument("--patience", type=int, default=3)
+    parser.add_argument("--early_stopping_patience", type=int, default=3)
+    parser.add_argument("--k_fold", type=int, default=5)
 
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
     parser.add_argument("--max_length", type=float, default=-1)
