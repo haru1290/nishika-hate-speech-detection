@@ -26,6 +26,5 @@ class HateSpeechDataset(Dataset):
 
 def load_data(data_dir):
     data = pd.read_csv(data_dir)
-    data["text"] = data["text"].translate(str.maketrans('', '', string.punctuation))
 
     return data

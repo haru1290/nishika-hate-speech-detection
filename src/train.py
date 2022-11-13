@@ -5,11 +5,13 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import argparse
+import neologdn
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
 from transformers import (
-    AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification, Trainer, TrainingArguments, EarlyStoppingCallback, AdamW,
+    AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
+    Trainer, TrainingArguments, EarlyStoppingCallback,
 )
 from load_data import *
 
@@ -49,9 +51,9 @@ def train(args):
         y_train = train_df["label"].iloc[train_index]
         y_valid = train_df["label"].iloc[valid_index]
 
-        X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+        X_train = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
-        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
+        X_valid = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
@@ -80,9 +82,9 @@ def train(args):
         trainer = Trainer(
             model=model,
             args=training_args,
-            tokenizer=tokenizer,
             train_dataset=train_dataset,
             eval_dataset=valid_dataset,
+            tokenizer=tokenizer,
             compute_metrics=compute_metrics,
             callbacks=[EarlyStoppingCallback(
                 early_stopping_patience=args.early_stopping_patience,
@@ -91,7 +93,7 @@ def train(args):
 
         trainer.train()
 
-        X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
+        X_test = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
         test_preds = trainer.predict(HateSpeechDataset(X_test))
         sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
         sub_df.to_csv(f"./data/submission/sub_{str(index)}.csv", index=False)

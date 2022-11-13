@@ -25,11 +25,18 @@
 # ls=0.15 (LB: 0.686)
 # ls=0.2 (LB: 0.700)
 # ls=0.25 (LB: 0.686)
+# python src/train.py \
+#     --k_fold 20 \
+#     --model_name studio-ousia/luke-japanese-base \
+#     --batch_size 16 \
+#     --epochs 100 \
+#     --label_smoothing_factor 0.2 \
+
 python src/train.py \
     --k_fold 20 \
-    --model_name studio-ousia/luke-japanese-base \
+    --model_name studio-ousia/luke-japanese-large \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \
 
-python src/submission.py
+# python src/submission.py
