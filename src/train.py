@@ -16,14 +16,25 @@ from transformers import (
 from load_data import *
 
 
+class CustomTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([0.1, 1]).cuda())
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+        return (loss, outputs) if return_outputs else loss
+
+
 def seed_everything(seed: int):
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
+    torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
 
 
 def compute_metrics(p: EvalPrediction):
@@ -79,7 +90,7 @@ def train(args):
             report_to=args.report_to,
         )
 
-        trainer = Trainer(
+        trainer = CustomTrainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,

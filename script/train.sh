@@ -32,11 +32,20 @@
 #     --epochs 100 \
 #     --label_smoothing_factor 0.2 \
 
+# k=15 (LB: 0.713)
+# k=20 (LB: 0.710)
+# python src/train.py \
+#     --k_fold 15 \
+#     --model_name studio-ousia/luke-japanese-large \
+#     --batch_size 16 \
+#     --epochs 100 \
+#     --label_smoothing_factor 0.2 \
+
 python src/train.py \
-    --k_fold 20 \
+    --k_fold 2 \
     --model_name studio-ousia/luke-japanese-large \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \
 
-# python src/submission.py
+python src/submission.py
