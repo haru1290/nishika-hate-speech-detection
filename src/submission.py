@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def main():
-    k = 15
+    k = 20
     preds = []
     for i in range(k):
         preds.append(pd.read_csv(f"./data/submission/sub_{str(i)}.csv"))

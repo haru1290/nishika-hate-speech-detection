@@ -5,7 +5,6 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import argparse
-import neologdn
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
@@ -16,14 +15,14 @@ from transformers import (
 from load_data import *
 
 
-class CustomTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("labels")
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([0.1, 1]).cuda())
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
-        return (loss, outputs) if return_outputs else loss
+# class CustomTrainer(Trainer):
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         labels = inputs.get("labels")
+#         outputs = model(**inputs)
+#         logits = outputs.get("logits")
+#         loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([0.1, 1]).cuda())
+#         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+#         return (loss, outputs) if return_outputs else loss
 
 
 def seed_everything(seed: int):
@@ -62,9 +61,9 @@ def train(args):
         y_train = train_df["label"].iloc[train_index]
         y_valid = train_df["label"].iloc[valid_index]
 
-        X_train = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+        X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
         train_dataset = HateSpeechDataset(X_train, y_train.tolist())
-        X_valid = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
+        X_valid = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_valid]
         valid_dataset = HateSpeechDataset(X_valid, y_valid.tolist())
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
@@ -90,7 +89,7 @@ def train(args):
             report_to=args.report_to,
         )
 
-        trainer = CustomTrainer(
+        trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
@@ -104,7 +103,7 @@ def train(args):
 
         trainer.train()
 
-        X_test = [tokenizer(neologdn.normalize(text), padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
+        X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in test_df["text"]]
         test_preds = trainer.predict(HateSpeechDataset(X_test))
         sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
         sub_df.to_csv(f"./data/submission/sub_{str(index)}.csv", index=False)
