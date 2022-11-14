@@ -15,14 +15,14 @@ from transformers import (
 from load_data import *
 
 
-# class CustomTrainer(Trainer):
-#     def compute_loss(self, model, inputs, return_outputs=False):
-#         labels = inputs.get("labels")
-#         outputs = model(**inputs)
-#         logits = outputs.get("logits")
-#         loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([4950/4950, 4950/306]).cuda())
-#         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
-#         return (loss, outputs) if return_outputs else loss
+class CustomTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([4950/4950, 4950/306]).cuda())
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+        return (loss, outputs) if return_outputs else loss
 
 
 def seed_everything(seed: int):
@@ -89,7 +89,7 @@ def train(args):
             report_to=args.report_to,
         )
 
-        trainer = Trainer(
+        trainer = CustomTrainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,

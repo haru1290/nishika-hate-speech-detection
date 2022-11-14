@@ -35,19 +35,19 @@
 # k=15 (LB: ?)
 # k=20 (LB: ?)
 # k=25 (LB: ?)
-python src/train.py \
-    --k_fold 26 \
-    --model_name studio-ousia/luke-japanese-large \
-    --batch_size 16 \
-    --epochs 100 \
-    --label_smoothing_factor 0.2 \
-
-# ロスの改善
 # python src/train.py \
-#     --k_fold 2 \
+#     --k_fold 25 \
 #     --model_name studio-ousia/luke-japanese-large \
 #     --batch_size 16 \
 #     --epochs 100 \
 #     --label_smoothing_factor 0.2 \
+
+# ロスの改善
+python src/train.py \
+    --k_fold 25 \
+    --model_name studio-ousia/luke-japanese-large \
+    --batch_size 16 \
+    --epochs 100 \
+    --label_smoothing_factor 0.2 \
 
 python src/submission.py
