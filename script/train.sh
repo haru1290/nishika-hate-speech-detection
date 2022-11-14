@@ -36,7 +36,7 @@
 # k=20 (LB: ?)
 # k=25 (LB: ?)
 python src/train.py \
-    --k_fold 25 \
+    --k_fold 26 \
     --model_name studio-ousia/luke-japanese-large \
     --batch_size 16 \
     --epochs 100 \
