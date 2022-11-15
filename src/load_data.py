@@ -22,9 +22,3 @@ class HateSpeechDataset(Dataset):
             input["labels"] = self.y[index]
 
         return input
-
-
-def load_data(data_dir):
-    data = pd.read_csv(data_dir)
-
-    return data
