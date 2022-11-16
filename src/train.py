@@ -16,35 +16,17 @@ from transformers import (
 from make_dataset import *
 
 
-# class Focal_MultiLabel_Loss(nn.Module):
-#     def __init__(self, gamma):
-#         super(Focal_MultiLabel_Loss, self).__init__()
-#         self.gamma = gamma
-#         self.bceloss = nn.CrossEntropyLoss(reduction="none")
+class Focal_MultiLabel_Loss(nn.Module):
+    def __init__(self, gamma):
+        super(Focal_MultiLabel_Loss, self).__init__()
+        self.gamma = gamma
+        self.bceloss = nn.CrossEntropyLoss(reduction="none")
 
-#     def forward(self, outputs, targets):
-#         bce = self.bceloss(outputs, targets)
-#         bce_exp = torch.exp(-bce)
-#         focal_loss = (1-bce_exp)**self.gamma * bce
-#         return focal_loss.mean()
-
-
-class Focal_Loss(nn.Module):
-  def __init__(self, gamma, weight=None, reduction='none'):
-    nn.Module.__init__(self)
-    self.weight = weight
-    self.gamma = gamma
-    self.reduction = reduction
-        
-  def forward(self, input_tensor, target_tensor):
-    log_prob = F.log_softmax(input_tensor, dim=-1)
-    prob = torch.exp(log_prob)
-    return F.nll_loss(
-        ((1 - prob) ** self.gamma) * log_prob, 
-        target_tensor, 
-        weight=self.weight,
-        reduction = self.reduction
-    )
+    def forward(self, outputs, targets):
+        bce = self.bceloss(outputs, targets)
+        bce_exp = torch.exp(-bce)
+        focal_loss = (1-bce_exp)**self.gamma * bce
+        return focal_loss.mean()
 
 
 class CustomTrainer(Trainer):
@@ -52,7 +34,7 @@ class CustomTrainer(Trainer):
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        loss_fct = Focal_Loss(gamma=2)
+        loss_fct = Focal_MultiLabel_Loss(gamma=1.0)
         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
@@ -131,6 +113,8 @@ def train(args, X_tra_val, y_tra_val, X_test):
             )],
         )
         trainer.train()
+        trainer.save_state()
+        trainer.save_model()
 
         test_preds.append(np.argmax(trainer.predict(test_dataset).predictions, axis=1))
 
