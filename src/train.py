@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import argparse
 
 from sklearn.metrics import f1_score
@@ -12,20 +13,38 @@ from transformers import (
     AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
     Trainer, TrainingArguments, EarlyStoppingCallback,
 )
-from load_data import *
+from make_dataset import *
 
 
-class Focal_MultiLabel_Loss(nn.Module):
-    def __init__(self, gamma):
-        super(Focal_MultiLabel_Loss, self).__init__()
-        self.gamma = gamma
-        self.bceloss = nn.CrossEntropyLoss(reduction='none')
+# class Focal_MultiLabel_Loss(nn.Module):
+#     def __init__(self, gamma):
+#         super(Focal_MultiLabel_Loss, self).__init__()
+#         self.gamma = gamma
+#         self.bceloss = nn.CrossEntropyLoss(reduction="none")
 
-    def forward(self, outputs, targets):
-        bce = self.bceloss(outputs, targets)
-        bce_exp = torch.exp(-bce)
-        focal_loss = (1-bce_exp)**self.gamma * bce
-        return focal_loss.mean()
+#     def forward(self, outputs, targets):
+#         bce = self.bceloss(outputs, targets)
+#         bce_exp = torch.exp(-bce)
+#         focal_loss = (1-bce_exp)**self.gamma * bce
+#         return focal_loss.mean()
+
+
+class Focal_Loss(nn.Module):
+  def __init__(self, gamma, weight=None, reduction='none'):
+    nn.Module.__init__(self)
+    self.weight = weight
+    self.gamma = gamma
+    self.reduction = reduction
+        
+  def forward(self, input_tensor, target_tensor):
+    log_prob = F.log_softmax(input_tensor, dim=-1)
+    prob = torch.exp(log_prob)
+    return F.nll_loss(
+        ((1 - prob) ** self.gamma) * log_prob, 
+        target_tensor, 
+        weight=self.weight,
+        reduction = self.reduction
+    )
 
 
 class CustomTrainer(Trainer):
@@ -33,8 +52,7 @@ class CustomTrainer(Trainer):
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        # loss_fct = nn.CrossEntropyLoss(weight=torch.tensor([4950/4950, 4950/306]).cuda())
-        loss_fct = Focal_MultiLabel_Loss(gamma=2)
+        loss_fct = Focal_Loss(gamma=2)
         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
@@ -59,19 +77,21 @@ def compute_metrics(p: EvalPrediction):
     }
 
 
-def train(args, X_train, y_train, X_test, sub_df):
+def train(args, X_tra_val, y_tra_val, X_test):
+    test_preds = []
+    
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+    X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_tra_val]
     X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_test]
     test_dataset = HateSpeechDataset(X_test)
 
-    skf = StratifiedKFold(n_splits=args.kfold, shuffle=True, random_state=args.seed)
-    for kfold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_train, y_train)):
-        X_tra = [X_train[i] for i in tra_idx]
-        X_val = [X_train[i] for i in val_idx]
-        y_tra = [y_train[i] for i in tra_idx]
-        y_val = [y_train[i] for i in val_idx]
+    skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
+    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_tra_val, y_tra_val)):
+        X_tra = [X_tra_val[i] for i in tra_idx]
+        X_val = [X_tra_val[i] for i in val_idx]
+        y_tra = [y_tra_val[i] for i in tra_idx]
+        y_val = [y_tra_val[i] for i in val_idx]
         
         training_dataset = HateSpeechDataset(X_tra, y_tra)
         validation_dataset = HateSpeechDataset(X_val, y_val)
@@ -79,7 +99,7 @@ def train(args, X_train, y_train, X_test, sub_df):
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
         
         training_args = TrainingArguments(
-            output_dir=f"./models/kfold_{str(kfold_idx)}/",
+            output_dir=f"./models/kfold_{str(fold_idx)}/",
             overwrite_output_dir=args.overwrite_output_dir,
             evaluation_strategy=args.evaluation_strategy,
             per_device_train_batch_size=args.batch_size,
@@ -112,21 +132,25 @@ def train(args, X_train, y_train, X_test, sub_df):
         )
         trainer.train()
 
-        test_preds = trainer.predict(test_dataset)
-        sub_df["label"] = np.argmax(test_preds.predictions, axis=1)
-        sub_df.to_csv(f"./data/submission/sub_{str(kfold_idx)}.csv", index=False)
+        test_preds.append(np.argmax(trainer.predict(test_dataset).predictions, axis=1))
+
+    return np.array(test_preds)
 
 
 def main(args):
     seed_everything(args.seed)
 
-    train_df = pd.read_csv("./data/input/train.csv")
+    tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
 
-    train(
-        args, train_df["text"].tolist(), train_df["label"].tolist(), test_df["text"].tolist(), sub_df
+    test_preds = train(
+        args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
+
+    sub_df["label"] = np.mean(test_preds, axis=0)
+    sub_df["label"] = np.round(sub_df["label"]).astype(int)
+    sub_df.to_csv(f"./data/submission/sub.csv", index=False)
 
 
 if __name__ == "__main__":
@@ -145,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("--label_smoothing_factor", type=float, default=0.2)
     parser.add_argument("--report_to", type=str, default="none")
     parser.add_argument("--early_stopping_patience", type=int, default=3)
-    parser.add_argument("--kfold", type=int, default=5)
+    parser.add_argument("--k_fold", type=int, default=5)
 
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
     parser.add_argument("--max_length", type=float, default=-1)

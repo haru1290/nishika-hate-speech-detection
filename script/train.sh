@@ -6,21 +6,21 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 # k=20 (LB:0.654)
 # k=30 (LB:0.651)
 # python src/train.py \
-#     --kfold 20 \
+#     --k_fold 20 \
 #     --model_name ku-nlp/roberta-base-japanese-char-wwm \
 #     --batch_size 16 \
 #     --epochs 100 \
 
 # k=20 (LB: 0.670)
 # python src/train.py \
-#     --kfold 20 \
+#     --k_fold 20 \
 #     --model_name studio-ousia/luke-japanese-base \
 #     --batch_size 16 \
 #     --epochs 100 \
 
 # k=20 (LB: 0.657)
 # python src/train.py \
-#     --kfold 20 \
+#     --k_fold 20 \
 #     --model_name megagonlabs/transformers-ud-japanese-electra-base-discriminator \
 #     --batch_size 16 \
 #     --epochs 100 \
@@ -29,7 +29,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 # ls=0.2 (LB: 0.700)
 # ls=0.25 (LB: 0.686)
 # python src/train.py \
-#     --kfold 20 \
+#     --k_fold 20 \
 #     --model_name studio-ousia/luke-japanese-base \
 #     --batch_size 16 \
 #     --epochs 100 \
@@ -39,7 +39,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 # k=20 (LB: 0.737)
 # k=25 (LB: 0.750)
 # python src/train.py \
-#     --kfold 25 \
+#     --k_fold 25 \
 #     --model_name studio-ousia/luke-japanese-large \
 #     --batch_size 16 \
 #     --epochs 100 \
@@ -47,10 +47,8 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # Focal_MultiLabel_Loss
 python src/train.py \
-    --kfold 25 \
+    --k_fold 25 \
     --model_name studio-ousia/luke-japanese-large \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \
-
-python src/submission.py
