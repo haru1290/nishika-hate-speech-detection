@@ -50,5 +50,5 @@ python src/train.py \
     --k_fold 25 \
     --model_name studio-ousia/luke-japanese-large \
     --batch_size 16 \
-    --epochs 100 \
+    --epochs 3 \
     --label_smoothing_factor 0.2 \

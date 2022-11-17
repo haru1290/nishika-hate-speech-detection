@@ -128,6 +128,10 @@ def main(args):
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
 
+    # 実験（前処理）
+    tra_val_df["text"] = tra_val_df["source"] + tra_val_df["text"]
+    test_df["text"] = test_df["source"] + test_df["text"]
+
     test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
