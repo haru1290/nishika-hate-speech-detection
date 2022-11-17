@@ -129,7 +129,7 @@ def main(args):
     tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
-    mysub_df = pd.read_csv("./data/submission/sub.csv")
+    mysub_df = pd.read_csv("./data/submission/sub_label.csv")
 
     test_df["label"] = mysub_df["label"]
     tra_val_df = pd.concat([tra_val_df, test_df], axis=0)
