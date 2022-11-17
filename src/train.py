@@ -61,6 +61,7 @@ def compute_metrics(p: EvalPrediction):
 
 def train(args, X_tra_val, y_tra_val, X_test):
     test_preds = []
+    oof_train = np.zeros((len(X_tra_val),))
     
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
@@ -116,9 +117,10 @@ def train(args, X_tra_val, y_tra_val, X_test):
         trainer.save_state()
         trainer.save_model()
 
+        oof_train[val_idx] = np.argmax(trainer.predict(validation_dataset).predictions, axis=1)
         test_preds.append(np.argmax(trainer.predict(test_dataset).predictions, axis=1))
 
-    return np.array(test_preds)
+    return oof_train, np.array(test_preds)
 
 
 def main(args):
@@ -127,14 +129,18 @@ def main(args):
     tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
+    # mysub_df = pd.read_csv("./data/submission/sub.csv")
 
-    # 実験（前処理）
-    tra_val_df["text"] = tra_val_df["source"] + tra_val_df["text"]
-    test_df["text"] = test_df["source"] + test_df["text"]
+    # test_df["label"] = mysub_df["label"]
+    # tra_val_df = pd.concat([tra_val_df, test_df], axis=0)
+    # tra_val_df = tra_val_df.reset_index()
 
-    test_preds = train(
+    oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
+    
+    tra_val_df["label"] = oof_train
+    tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
 
     sub_df["label"] = np.mean(test_preds, axis=0)
     sub_df["label"] = np.round(sub_df["label"]).astype(int)
