@@ -129,16 +129,17 @@ def main(args):
     tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
-    # mysub_df = pd.read_csv("./data/submission/sub.csv")
+    mysub_df = pd.read_csv("./data/submission/sub.csv")
 
-    # test_df["label"] = mysub_df["label"]
-    # tra_val_df = pd.concat([tra_val_df, test_df], axis=0)
-    # tra_val_df = tra_val_df.reset_index()
+    test_df["label"] = mysub_df["label"]
+    tra_val_df = pd.concat([tra_val_df, test_df], axis=0)
+    tra_val_df = tra_val_df.reset_index()
 
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
 
+    print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
     tra_val_df["label"] = oof_train
     tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
 
