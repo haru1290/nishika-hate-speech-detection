@@ -138,7 +138,7 @@ def main(args):
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
-    
+
     tra_val_df["label"] = oof_train
     tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
 
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument("--k_fold", type=int, default=5)
 
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
-    parser.add_argument("--max_length", type=float, default=-1)
+    parser.add_argument("--max_length", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
     parser.add_argument("--epochs", type=int, default=3)

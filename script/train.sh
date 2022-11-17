@@ -49,6 +49,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 python src/train.py \
     --k_fold 25 \
     --model_name studio-ousia/luke-japanese-large \
+    --max_length 128 \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \
