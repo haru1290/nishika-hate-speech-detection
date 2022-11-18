@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import argparse
+import warnings
+warnings.simplefilter('ignore')
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
@@ -16,9 +18,9 @@ from transformers import (
 from make_dataset import *
 
 
-class Focal_MultiLabel_Loss(nn.Module):
+class FocalLoss(nn.Module):
     def __init__(self, gamma):
-        super(Focal_MultiLabel_Loss, self).__init__()
+        super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.bceloss = nn.CrossEntropyLoss(reduction="none")
 
@@ -34,7 +36,7 @@ class CustomTrainer(Trainer):
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        loss_fct = Focal_MultiLabel_Loss(gamma=1.0)
+        loss_fct = FocalLoss(gamma=1.0)
         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
@@ -62,8 +64,9 @@ def compute_metrics(p: EvalPrediction):
 def train(args, X_tra_val, y_tra_val, X_test):
     test_preds = []
     oof_train = np.zeros((len(X_tra_val),))
-    
+
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    # tokenizer.add_tokens(["[TRUE]", "[FALSE]"], special_tokens=True)
 
     X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_tra_val]
     X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_test]
@@ -75,12 +78,13 @@ def train(args, X_tra_val, y_tra_val, X_test):
         X_val = [X_tra_val[i] for i in val_idx]
         y_tra = [y_tra_val[i] for i in tra_idx]
         y_val = [y_tra_val[i] for i in val_idx]
-        
+
         training_dataset = HateSpeechDataset(X_tra, y_tra)
         validation_dataset = HateSpeechDataset(X_val, y_val)
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
-        
+        # model.resize_token_embeddings(len(tokenizer))
+
         training_args = TrainingArguments(
             output_dir=f"./models/kfold_{str(fold_idx)}/",
             overwrite_output_dir=args.overwrite_output_dir,
@@ -118,7 +122,7 @@ def train(args, X_tra_val, y_tra_val, X_test):
         trainer.save_model()
 
         oof_train[val_idx] = np.argmax(trainer.predict(validation_dataset).predictions, axis=1)
-        test_preds.append(np.argmax(trainer.predict(test_dataset).predictions, axis=1))
+        test_preds.append(trainer.predict(test_dataset).predictions)
 
     return oof_train, np.array(test_preds)
 
@@ -129,22 +133,16 @@ def main(args):
     tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
-    mysub_df = pd.read_csv("./data/submission/sub_label.csv")
-
-    test_df["label"] = mysub_df["label"]
-    tra_val_df = pd.concat([tra_val_df, test_df], axis=0)
-    tra_val_df = tra_val_df.reset_index()
 
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
-    tra_val_df["label"] = oof_train
-    tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
+    # tra_val_df["label"] = oof_train
+    # tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
 
-    sub_df["label"] = np.mean(test_preds, axis=0)
-    sub_df["label"] = np.round(sub_df["label"]).astype(int)
+    sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
     sub_df.to_csv(f"./data/submission/sub.csv", index=False)
 
 
@@ -155,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--save_total_limit", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)

@@ -46,10 +46,20 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 #     --label_smoothing_factor 0.2 \
 
 # Focal_MultiLabel_Loss
+# γ=0.1 (LB: 0.758)
+# python src/train.py \
+#     --k_fold 25 \
+#     --model_name studio-ousia/luke-japanese-large \
+#     --batch_size 16 \
+#     --epochs 100 \
+#     --label_smoothing_factor 0.2 \
+
+# max_length=128 (CV: 0.775, LB: 0.742)
+# max_length=256 (CV: 0.?, LB: 0.?)
 python src/train.py \
-    --k_fold 25 \
+    --k_fold 15 \
     --model_name studio-ousia/luke-japanese-large \
-    --max_length 128 \
+    --max_length 256 \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \
