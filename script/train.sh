@@ -54,7 +54,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 #     --epochs 100 \
 #     --label_smoothing_factor 0.2 \
 
-# max_length=128 (CV: ?, LB: ?)
+# max_length=128 (CV: 0.772, LB: ?)
 # max_length=256 (CV: 0.760, LB: 0.755)
 python src/train.py \
     --k_fold 15 \

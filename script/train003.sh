@@ -1,5 +1,6 @@
 export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
+# 文の先頭に板情報のトークンを追加
 # (CV: ?, LB: ?)
 python src/train002.py \
     --model_name studio-ousia/luke-japanese-large \

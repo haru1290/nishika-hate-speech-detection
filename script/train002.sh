@@ -1,5 +1,6 @@
 export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
+# ベースラインのmax_lengthを検証256
 # (CV: 0.760, LB: 0.755)
 python src/train001.py \
     --model_name studio-ousia/luke-japanese-large \
