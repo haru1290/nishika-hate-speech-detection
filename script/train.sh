@@ -54,12 +54,12 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 #     --epochs 100 \
 #     --label_smoothing_factor 0.2 \
 
-# max_length=128 (CV: 0.775, LB: 0.742)
-# max_length=256 (CV: 0.?, LB: 0.?)
+# max_length=128 (CV: ?, LB: ?)
+# max_length=256 (CV: 0.760, LB: 0.755)
 python src/train.py \
     --k_fold 15 \
     --model_name studio-ousia/luke-japanese-large \
-    --max_length 256 \
+    --max_length 128 \
     --batch_size 16 \
     --epochs 100 \
     --label_smoothing_factor 0.2 \

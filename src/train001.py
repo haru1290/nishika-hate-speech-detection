@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import argparse
 import warnings
 warnings.simplefilter('ignore')
@@ -86,7 +85,7 @@ def train(args, X_tra_val, y_tra_val, X_test):
         # model.resize_token_embeddings(len(tokenizer))
 
         training_args = TrainingArguments(
-            output_dir=f"./models/kfold_{str(fold_idx)}/",
+            output_dir=f"./models/{args.run_name}/kfold_{str(fold_idx)}/",
             overwrite_output_dir=args.overwrite_output_dir,
             evaluation_strategy=args.evaluation_strategy,
             per_device_train_batch_size=args.batch_size,
@@ -140,10 +139,10 @@ def main(args):
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
     # tra_val_df["label"] = oof_train
-    # tra_val_df.to_csv(f"./data/submission/val.csv", index=False)
+    # tra_val_df.to_csv(f"./data/output/val.csv", index=False)
 
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(f"./data/submission/sub.csv", index=False)
+    sub_df.to_csv(f"./data/output/sub.csv", index=False)
 
 
 if __name__ == "__main__":
@@ -153,7 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=2)
+    parser.add_argument("--save_total_limit", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)
@@ -162,9 +161,10 @@ if __name__ == "__main__":
     parser.add_argument("--label_smoothing_factor", type=float, default=0.2)
     parser.add_argument("--report_to", type=str, default="none")
     parser.add_argument("--early_stopping_patience", type=int, default=3)
-    parser.add_argument("--k_fold", type=int, default=5)
 
     parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
+    parser.add_argument("--run_name", type=str, default="bert-base-japanese")
+    parser.add_argument("--k_fold", type=int, default=5)
     parser.add_argument("--max_length", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--learning_rate", type=float, default=3e-5)
