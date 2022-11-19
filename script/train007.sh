@@ -1,7 +1,7 @@
 export CUDA_VISIBLE_DEVICES="2,3"
 
 # luke-japanese-largeでfoldを減らして実験10fold
-# (CV: 0.?, LB: ?)
+# (CV: ?, LB: ?)
 python src/train001.py \
     --model_name studio-ousia/luke-japanese-large \
     --run_name train007 \
