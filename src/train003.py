@@ -92,7 +92,9 @@ def train(args, X_tra_val, y_tra_val, X_test):
             num_train_epochs=args.epochs,
             log_level=args.log_level,
             logging_strategy=args.logging_strategy,
+            logging_steps=args.steps,
             save_strategy=args.save_strategy,
+            save_steps=args.steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
             data_seed=args.seed,
@@ -131,6 +133,10 @@ def main(args):
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
 
+    # preprocessing
+    tra_val_df["text"] = "[" + tra_val_df["source"] + "]" + tra_val_df["text"]
+    test_df["text"] = "[" + test_df["source"] + "]" + test_df["text"]
+
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
     )
@@ -149,8 +155,9 @@ if __name__ == "__main__":
     parser.add_argument("--evaluation_strategy", type=str, default="epoch")
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
+    parser.add_argument("--steps", type=int, default=25)
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=1)
+    parser.add_argument("--save_total_limit", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)

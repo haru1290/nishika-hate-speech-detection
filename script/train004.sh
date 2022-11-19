@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # 検証をepochからstepに変更
 # (CV: ?, LB: ?)
-python src/train001.py \
+python src/train003.py \
     --evaluation_strategy steps \
     --logging_strategy steps \
     --save_strategy steps \
