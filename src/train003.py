@@ -157,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument("--logging_strategy", type=str, default="epoch")
     parser.add_argument("--steps", type=int, default=25)
     parser.add_argument("--save_strategy", type=str, default="epoch")
-    parser.add_argument("--save_total_limit", type=int, default=2)
+    parser.add_argument("--save_total_limit", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--fp16", type=bool, default=True)
     parser.add_argument("--remove_unused_columns", type=bool, default=False)

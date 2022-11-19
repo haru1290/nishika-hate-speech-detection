@@ -1,11 +1,11 @@
-export CUDA_VISIBLE_DEVICES="0,1,2,3"
+export CUDA_VISIBLE_DEVICES="2,3"
 
-# 追加学習のluke8000
+# luke-japanese-largeでfoldを減らして実験10fold
 # (CV: 0.?, LB: ?)
 python src/train001.py \
-    --model_name ./models/luke-pretraining/checkpoint-8000 \
+    --model_name studio-ousia/luke-japanese-large \
     --run_name train007 \
-    --k_fold 15 \
+    --k_fold 10 \
     --max_length 256 \
     --batch_size 16 \
     --epochs 100 \
