@@ -1,10 +1,10 @@
-export CUDA_VISIBLE_DEVICES="0"
+export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # luke-japanese-large-lite (k=14)
-# (CV: 0.348, LB: ?)
+# (CV: 0.764, LB: ?)
 python src/train001.py \
     --model_name studio-ousia/luke-japanese-large-lite \
-    --run_name train009 \
+    --run_name train010 \
     --k_fold 14 \
     --max_length 256 \
     --batch_size 16 \
