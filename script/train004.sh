@@ -1,7 +1,7 @@
-export CUDA_VISIBLE_DEVICES="0,1,2,3"
+export CUDA_VISIBLE_DEVICES="1,2,3,4"
 
 # 検証をepochからstepに変更
-# (CV: 0.801, LB: 0.725)
+# (CV: 0.786, LB: 0.752)
 python src/train003.py \
     --evaluation_strategy steps \
     --logging_strategy steps \
