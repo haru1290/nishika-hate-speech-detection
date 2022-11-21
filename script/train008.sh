@@ -1,7 +1,7 @@
 export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # luke-japanese-large-lite (k=10)
-# (CV: 0.754, LB: ?)
+# (CV: 0.754, LB: 0.716)
 python src/train001.py \
     --model_name studio-ousia/luke-japanese-large-lite \
     --run_name train008 \
