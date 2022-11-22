@@ -2,6 +2,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # 検証をepochからstepに変更
 # studio-ousia/luke-japanese-large-lite
+# ソフトラベルの追加
 # (CV: ?, LB: ?)
 python src/train004.py \
     --evaluation_strategy steps \
