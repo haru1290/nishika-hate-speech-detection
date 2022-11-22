@@ -17,17 +17,17 @@ from transformers import (
 from make_dataset import *
 
 
-# class FocalLoss(nn.Module):
-#     def __init__(self, gamma):
-#         super(FocalLoss, self).__init__()
-#         self.gamma = gamma
-#         self.bceloss = nn.CrossEntropyLoss(reduction="none")
+class FocalLoss(nn.Module):
+    def __init__(self, gamma):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.bceloss = nn.CrossEntropyLoss(reduction="none")
 
-#     def forward(self, outputs, targets):
-#         bce = self.bceloss(outputs, targets)
-#         bce_exp = torch.exp(-bce)
-#         focal_loss = (1-bce_exp)**self.gamma * bce
-#         return focal_loss.mean()
+    def forward(self, outputs, targets):
+        bce = self.bceloss(outputs, targets)
+        bce_exp = torch.exp(-bce)
+        focal_loss = (1-bce_exp)**self.gamma * bce
+        return focal_loss.mean()
 
 
 class CustomLoss(nn.Module):
@@ -166,7 +166,7 @@ def main(args):
     # tra_val_df.to_csv(f"./data/output/val.csv", index=False)
 
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(f"./data/output/sub.csv", index=False)
+    sub_df.to_csv(f"./data/output/sub_{args.run_name}.csv", index=False)
 
 
 if __name__ == "__main__":

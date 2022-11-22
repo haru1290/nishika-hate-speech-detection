@@ -142,7 +142,7 @@ def main(args):
     # tra_val_df.to_csv(f"./data/output/val.csv", index=False)
 
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(f"./data/output/sub.csv", index=False)
+    sub_df.to_csv(f"./data/output/sub_{args.run_name}.csv", index=False)
 
 
 if __name__ == "__main__":
