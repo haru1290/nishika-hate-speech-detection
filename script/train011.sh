@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # 検証をepochからstepに変更
 # studio-ousia/luke-japanese-large-lite
-# (CV: ?, LB: 0.743)
+# (CV: 0.767, LB: 0.743)
 python src/train003.py \
     --evaluation_strategy steps \
     --logging_strategy steps \
