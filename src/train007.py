@@ -17,26 +17,26 @@ from transformers import (
 from make_dataset import *
 
 
-class FocalLoss(nn.Module):
-    def __init__(self, gamma):
-        super(FocalLoss, self).__init__()
-        self.gamma = gamma
-        self.bceloss = nn.CrossEntropyLoss(reduction="none")
+# class FocalLoss(nn.Module):
+#     def __init__(self, gamma=None):
+#         super(FocalLoss, self).__init__()
+#         self.gamma = gamma
+#         self.bceloss = nn.CrossEntropyLoss(reduction="none")
 
-    def forward(self, outputs, targets):
-        bce = self.bceloss(outputs, targets)
-        bce_exp = torch.exp(-bce)
-        focal_loss = (1-bce_exp)**self.gamma * bce
-        return focal_loss.mean()
+#     def forward(self, outputs, targets):
+#         bce = self.bceloss(outputs, targets)
+#         bce_exp = torch.exp(-bce)
+#         focal_loss = (1-bce_exp)**self.gamma * bce
+#         return focal_loss.mean()
 
 
 class CustomLoss(nn.Module):
     def __init__(self, alpha=None):
         super(CustomLoss, self).__init__()
         self.alpha = alpha
-        self.ce_loss = nn.CrossEntropyLoss(reduction="none")
+        self.ce_loss = nn.CrossEntropyLoss(reduction="none", label_smoothing=0.2)
         self.mse_loss = nn.MSELoss(reduction="none")
-    
+
     def forward(self, outputs, targets):
         h_label = targets.T[0].to(torch.int64)
         s_label = targets.T[1].float()
@@ -153,7 +153,7 @@ def main(args):
     tra_val_df = pd.read_csv("./data/input/train.csv")
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
-
+    
     # soft_label
     soft_label = np.load("data/working/soft_label.npy")
 
