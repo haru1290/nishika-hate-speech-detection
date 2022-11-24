@@ -34,7 +34,7 @@ class CustomLoss(nn.Module):
     def __init__(self, alpha=None):
         super(CustomLoss, self).__init__()
         self.alpha = alpha
-        self.ce_loss = nn.CrossEntropyLoss(reduction="none", label_smoothing=0.2)
+        self.ce_loss = nn.CrossEntropyLoss(reduction="none", label_smoothing=0.15)
         self.mse_loss = nn.MSELoss(reduction="none")
 
     def forward(self, outputs, targets):

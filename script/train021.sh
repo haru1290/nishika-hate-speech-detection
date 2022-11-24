@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES="0,1,2,3"
 
 # studio-ousia/luke-japanese-large
 # ソフトラベルの追加
-# ラベルスムージング0.2
+# ラベルスムージング0.15
 # (CV: ?, LB: ?)
 python src/train007.py \
     --model_name studio-ousia/luke-japanese-large \
