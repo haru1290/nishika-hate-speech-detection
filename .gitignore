@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Models
-models/
+kfold_*
