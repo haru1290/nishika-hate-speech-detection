@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import json
 import argparse
 import warnings
 warnings.simplefilter('ignore')
@@ -136,23 +137,23 @@ def train(args, X_tra_val, y_tra_val, X_test, soft_tra_val):
 def main(args):
     seed_everything(args.seed)
 
-    tra_val_df = pd.read_csv("./data/input/train.csv")
-    test_df = pd.read_csv("./data/input/test.csv")
-    sub_df = pd.read_csv("./data/input/sample_submission.csv")
+    settings = open("./config/settings.json")
+    settings = json.load(settings)
+
+    tra_val_df = pd.read_csv(settings["TRAIN_RAW_DATA_PATH"])
+    test_df = pd.read_csv(settings["TEST_RAW_DATA_PATH"])
+    sub_df = pd.read_csv(settings["SUBMISSION_RAW_DATA_PATH"])
 
     # soft_label
-    soft_label = np.load("data/working/soft_label.npy")
+    soft_label = np.load(settings["EXTERNAL_DATA_DIR"] + "soft_label.npy")
 
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values, soft_label[:, 0],
     )
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
-    # tra_val_df["label"] = oof_train
-    # tra_val_df.to_csv(f"./data/output/val.csv", index=False)
-
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(f"./data/output/sub_{args.run_name}.csv", index=False)
+    sub_df.to_csv(settings["PROCESSED_DATA_DIR"] + f"sub_{args.run_name}.csv", index=False)
 
 
 if __name__ == "__main__":
