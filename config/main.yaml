@@ -1,0 +1,8 @@
+train:
+  path: ./data/raw/train.csv
+
+test:
+  path: ./data/raw/test.csv
+
+submission:
+  path: ./data/raw/sample_submission.csv
