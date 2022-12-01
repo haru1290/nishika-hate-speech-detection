@@ -12,5 +12,4 @@
 │   └── raw
 ├── models
 └── src
-    └── __pycache__
 ```
