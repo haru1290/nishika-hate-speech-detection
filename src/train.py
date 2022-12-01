@@ -17,17 +17,24 @@ from transformers import (
 from make_dataset import *
 
 
-class FocalLoss(nn.Module):
-    def __init__(self, gamma):
-        super(FocalLoss, self).__init__()
-        self.gamma = gamma
-        self.bceloss = nn.CrossEntropyLoss(reduction="none")
-
+class CustomLoss(nn.Module):
+    def __init__(self, alpha=None):
+        super(CustomLoss, self).__init__()
+        self.alpha = alpha
+        self.ce_loss = nn.CrossEntropyLoss(reduction="none")
+        self.mse_loss = nn.MSELoss(reduction="none")
+    
     def forward(self, outputs, targets):
-        bce = self.bceloss(outputs, targets)
-        bce_exp = torch.exp(-bce)
-        focal_loss = (1-bce_exp)**self.gamma * bce
-        return focal_loss.mean()
+        h_label = targets.T[0].to(torch.int64)
+        s_label = targets.T[1].float()
+        s_label = torch.stack([s_label,1 - s_label], dim=1)
+        s_loss = self.mse_loss(outputs,s_label).mean()
+        s_loss.mul_(self.alpha)
+        s_loss.div_(2)
+        h_loss = self.ce_loss(outputs, h_label).mean()
+        loss = (s_loss + h_loss).float()
+        loss /= 2*(1+self.alpha)**2
+        return loss
 
 
 class CustomTrainer(Trainer):
@@ -35,8 +42,8 @@ class CustomTrainer(Trainer):
         labels = inputs.get("labels")
         outputs = model(**inputs)
         logits = outputs.get("logits")
-        loss_fct = FocalLoss(gamma=1.0)
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
+        loss_fct = CustomLoss(alpha=1.0)
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
         return (loss, outputs) if return_outputs else loss
 
 
@@ -54,13 +61,13 @@ def seed_everything(seed: int):
 def compute_metrics(p: EvalPrediction):
     preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
     preds = np.argmax(preds, axis=1)
-    f1 = f1_score(p.label_ids, preds)
+    f1 = f1_score(p.label_ids.T[0], preds)
     return {
         "f1_score": f1,
     }
 
 
-def train(args, X_tra_val, y_tra_val, X_test):
+def train(args, X_tra_val, y_tra_val, X_test, soft_tra_val):
     test_preds = []
     oof_train = np.zeros((len(X_tra_val),))
 
@@ -74,8 +81,8 @@ def train(args, X_tra_val, y_tra_val, X_test):
     for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_tra_val, y_tra_val)):
         X_tra = [X_tra_val[i] for i in tra_idx]
         X_val = [X_tra_val[i] for i in val_idx]
-        y_tra = [y_tra_val[i] for i in tra_idx]
-        y_val = [y_tra_val[i] for i in val_idx]
+        y_tra = [[y_tra_val[i], soft_tra_val[i]] for i in tra_idx]
+        y_val = [[y_tra_val[i], soft_tra_val[i]] for i in val_idx]
 
         training_dataset = HateSpeechDataset(X_tra, y_tra)
         validation_dataset = HateSpeechDataset(X_val, y_val)
@@ -92,7 +99,9 @@ def train(args, X_tra_val, y_tra_val, X_test):
             num_train_epochs=args.epochs,
             log_level=args.log_level,
             logging_strategy=args.logging_strategy,
+            logging_steps=args.steps,
             save_strategy=args.save_strategy,
+            save_steps=args.steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
             data_seed=args.seed,
@@ -131,8 +140,11 @@ def main(args):
     test_df = pd.read_csv("./data/input/test.csv")
     sub_df = pd.read_csv("./data/input/sample_submission.csv")
 
+    # soft_label
+    soft_label = np.load("data/working/soft_label.npy")
+
     oof_train, test_preds = train(
-        args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values,
+        args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values, soft_label[:, 0],
     )
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
@@ -149,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument("--evaluation_strategy", type=str, default="epoch")
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
+    parser.add_argument("--steps", type=int, default=25)
     parser.add_argument("--save_strategy", type=str, default="epoch")
     parser.add_argument("--save_total_limit", type=int, default=1)
     parser.add_argument("--seed", type=int, default=42)
