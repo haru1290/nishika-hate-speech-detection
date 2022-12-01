@@ -1,4 +1,6 @@
-# Nishika - ヘイトスピーチ検出
+# Nishika - Hate Speech Detection
+
+## Project Structure
 
 ```
 ./
