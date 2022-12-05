@@ -153,7 +153,7 @@ def main(args):
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(settings["PROCESSED_DATA_DIR"] + f"sub_{args.run_name}.csv", index=False)
+    sub_df.to_csv(settings["PROCESSED_DATA_DIR"] + "sub.csv", index=False)
 
 
 if __name__ == "__main__":
