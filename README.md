@@ -1,4 +1,4 @@
-# Nishika - ヘイトスピーチ検出
+# Nishika - Hate Speech Detection
 
 ## Project Structure
 
@@ -23,7 +23,7 @@ nishika-hate-speech-detection
     └── train_model.py
 ```
 
-## 12/4までにやること
+## 12/8までにやること
 
 - ハンドラの追加
 - predictionを作成
