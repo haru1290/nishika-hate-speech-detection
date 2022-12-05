@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-./
+nishika-hate-speech-detection
 ├── LICENCE
 ├── Makefile
 ├── README.md
