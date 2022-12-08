@@ -8,8 +8,7 @@
 ├── Makefile
 ├── README.md
 ├── config
-│   ├── main.yaml
-│   └── settings.json
+│   └──main.yaml
 ├── data
 │   ├── external
 │   ├── interim
