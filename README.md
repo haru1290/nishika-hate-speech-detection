@@ -23,10 +23,10 @@ nishika-hate-speech-detection
     └── train_model.py
 ```
 
-## 12/8までにやること
+## 12/10までにやること
 
 - predictionを作成
-- generate_labelの追加
+- generate_labelをbuild_features.pyに追加
 - ハンドラの追加
 - READMEを書く
 - 公開
