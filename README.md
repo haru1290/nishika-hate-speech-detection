@@ -45,4 +45,4 @@
 - generate_labelをbuild_features.pyに追加
 - リファクタリング
 - READMEを書く
-- 公開+アドベントカレンダーを書く
+- アドベントカレンダーを書く
