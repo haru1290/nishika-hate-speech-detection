@@ -12,9 +12,7 @@
 ├── data
 │   ├── external
 │   ├── interim
-│   │   └── soft_label.npy
 │   ├── processed
-│   │   └── sub.csv
 │   └── raw
 │       ├── data_explanation.xlsx
 │       ├── sample_submission.csv
