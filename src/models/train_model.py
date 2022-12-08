@@ -6,8 +6,6 @@ import torch
 import torch.nn as nn
 import json
 import argparse
-import warnings
-warnings.simplefilter('ignore')
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
