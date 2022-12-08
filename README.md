@@ -3,24 +3,42 @@
 ## Project Structure
 
 ```
-nishika-hate-speech-detection
+./nishika-hate-speech-detection
 ├── LICENCE
 ├── Makefile
 ├── README.md
 ├── config
 │   ├── main.yaml
+│   └── settings.json
 ├── data
 │   ├── external
 │   ├── interim
+│   │   └── soft_label.npy
 │   ├── processed
+│   │   └── sub.csv
 │   └── raw
+│       ├── data_explanation.xlsx
+│       ├── sample_submission.csv
+│       ├── test.csv
+│       └── train.csv
+├── docs
+├── environment.yml
 ├── models
-├── requirements.txt
+├── notebooks
+├── references
+├── reports
+│   └── figures
 └── src
     ├── __init__.py
-    ├── make_dataset.py
-    ├── predict_model.py
-    └── train_model.py
+    ├── data
+    │   └── make_dataset.py
+    ├── features
+    │   └── build_features.py
+    ├── models
+    │   ├── predict_model.py
+    │   └── train_model.py
+    └── visualization
+        └── visualize.py
 ```
 
 ## 12/10までにやること
