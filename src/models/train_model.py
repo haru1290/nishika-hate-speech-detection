@@ -15,7 +15,7 @@ from transformers import (
     AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
     Trainer, TrainingArguments, EarlyStoppingCallback,
 )
-from make_dataset import *
+from src.data.make_dataset import *
 
 
 class CustomLoss(nn.Module):
