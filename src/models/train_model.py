@@ -13,7 +13,8 @@ from transformers import (
     AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
     Trainer, TrainingArguments, EarlyStoppingCallback,
 )
-from data.raw.make_dataset import *
+from omegaconf import DictConfig
+from ..data.rmake_dataset import *
 
 
 class CustomLoss(nn.Module):
@@ -133,7 +134,7 @@ def train(args, X_tra_val, y_tra_val, X_test, soft_tra_val):
 
 
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
-def main(cfg):
+def main(cfg: DictConfig):
     seed_everything(args.seed)
 
     tra_val_df = pd.read_csv(cfg.path.train)
