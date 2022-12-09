@@ -66,34 +66,30 @@ def compute_metrics(p: EvalPrediction):
     }
 
 
-def train(X_train, y_train, soft_lable, cfg):
+def train(train_df, soft_lable, cfg):
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+    X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
-    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_train, y_train)):
-        X_tra = [X_train[i] for i in tra_idx]
-        X_val = [X_train[i] for i in val_idx]
-        y_tra = [[y_train[i], soft_lable[i]] for i in tra_idx]
-        y_val = [[y_train[i], soft_lable[i]] for i in val_idx]
+    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_tra_val, y_tra_val)): 
+        X_tra = [X_tra_val[i] for i in tra_idx]
+        X_val = [X_tra_val[i] for i in tra_idx]
+        y_tra = [[y_tra_val[i], soft_lable[i]] for i in tra_idx]
+        y_val = [[y_tra_val[i], soft_lable[i]] for i in val_idx]
 
-        training_dataset = HateSpeechDataset(X_tra, y_tra)
-        validation_dataset = HateSpeechDataset(X_val, y_val)
-
-        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
+        train_data = 
+        vlaid_data = 
+        train_dataset = HateSpeechDataset(X_tra, y_tra, tokenizer)
+        valid_dataset = HateSpeechDataset(X_val, y_val, tokenizer)
 
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{str(fold_idx)}/",
-            overwrite_output_dir=True,
             evaluation_strategy="epoch",
             per_device_train_batch_size=cfg.training.batch_size,
             per_device_eval_batch_size=cfg.training.batch_size,
-            learning_rate=args.learning_rate,
-            num_train_epochs=args.epochs,
-            log_level=args.log_level,
-            logging_strategy=args.logging_strategy,
-            logging_steps=args.steps,
-            save_strategy=args.save_strategy,
+            learning_rate=cfg.training.learning_rate,
+            num_train_epochs=cfg.training.epoch,
+            save_strategy="epoch",
             save_steps=args.steps,
             save_total_limit=args.save_total_limit,
             seed=args.seed,
@@ -106,16 +102,18 @@ def train(X_train, y_train, soft_lable, cfg):
             report_to=args.report_to,
         )
 
+        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
+
         trainer = CustomTrainer(
             model=model,
             args=training_args,
-            train_dataset=training_dataset,
-            eval_dataset=validation_dataset,
+            train_dataset=train_dataset,
+            eval_dataset=valid_dataset,
             tokenizer=tokenizer,
             compute_metrics=compute_metrics,
-            callbacks=[EarlyStoppingCallback(
-                early_stopping_patience=args.early_stopping_patience,
-            )],
+            callbacks=[
+                EarlyStoppingCallback(early_stopping_patience=args.early_stopping_patience)
+            ],
         )
 
         trainer.train()
@@ -135,8 +133,7 @@ def main(cfg):
     soft_label = np.load(cfg.path.soft_label)
 
     train(
-        train_df["text"].values,
-        train_df["label"].values,
+        train_df,
         soft_label[:, 0],
         cfg,
     )
@@ -144,7 +141,6 @@ def main(cfg):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--overwrite_output_dir", type=bool, default=True)
     parser.add_argument("--evaluation_strategy", type=str, default="epoch")
     parser.add_argument("--log_level", type=str, default="critical")
     parser.add_argument("--logging_strategy", type=str, default="epoch")
