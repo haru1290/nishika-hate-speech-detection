@@ -68,7 +68,6 @@ def compute_metrics(p: EvalPrediction):
 
 # X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 def train(train_df, soft_lable, cfg):
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(train_df["text"].values, train_df["label"].values)):
