@@ -100,8 +100,6 @@ def train(train_df, soft_lable, cfg):
             report_to=args.report_to,
         )
 
-        
-
         trainer = CustomTrainer(
             model=model,
             args=training_args,
