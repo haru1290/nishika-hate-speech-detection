@@ -86,8 +86,8 @@ def train(X_train, y_train, soft_lable, cfg):
             output_dir=f"./models/{args.run_name}/kfold_{str(fold_idx)}/",
             overwrite_output_dir=True,
             evaluation_strategy="epoch",
-            per_device_train_batch_size=args.batch_size,
-            per_device_eval_batch_size=args.batch_size,
+            per_device_train_batch_size=cfg.training.batch_size,
+            per_device_eval_batch_size=cfg.training.batch_size,
             learning_rate=args.learning_rate,
             num_train_epochs=args.epochs,
             log_level=args.log_level,
@@ -127,7 +127,7 @@ def train(X_train, y_train, soft_lable, cfg):
 def main(cfg):
     seed_everything(args.seed)
 
-    tra_val_df = pd.read_csv(cfg.path.train)
+    train_df = pd.read_csv(cfg.path.train)
     test_df = pd.read_csv(cfg.path.test)
     sub_df = pd.read_csv(cfg.path.submission)
 
@@ -135,8 +135,8 @@ def main(cfg):
     soft_label = np.load(cfg.path.soft_label)
 
     train(
-        tra_val_df["text"].values,
-        tra_val_df["label"].values,
+        train_df["text"].values,
+        train_df["label"].values,
         soft_label[:, 0],
         cfg,
     )
