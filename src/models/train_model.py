@@ -123,11 +123,10 @@ def train(train_df, soft_lable, cfg):
 def main(cfg):
     seed_everything(args.seed)
 
+    # training data
     train_df = pd.read_csv(cfg.path.train)
-    test_df = pd.read_csv(cfg.path.test)
-    sub_df = pd.read_csv(cfg.path.submission)
 
-    # soft_label
+    # soft label data
     soft_label = np.load(cfg.path.soft_label)
 
     train(
