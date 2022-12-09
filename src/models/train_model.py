@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import json
 import argparse
+import hydra
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
@@ -132,18 +132,16 @@ def train(args, X_tra_val, y_tra_val, X_test, soft_tra_val):
     return oof_train, np.array(test_preds)
 
 
-def main(args):
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
+def main(cfg):
     seed_everything(args.seed)
 
-    settings = open("./config/settings.json")
-    settings = json.load(settings)
-
-    tra_val_df = pd.read_csv(settings["TRAIN_RAW_DATA_PATH"])
-    test_df = pd.read_csv(settings["TEST_RAW_DATA_PATH"])
-    sub_df = pd.read_csv(settings["SUBMISSION_RAW_DATA_PATH"])
+    tra_val_df = pd.read_csv(cfg.path.train)
+    test_df = pd.read_csv(cfg.path.test)
+    sub_df = pd.read_csv(cfg.path.submission)
 
     # soft_label
-    soft_label = np.load(settings["EXTERNAL_DATA_DIR"] + "soft_label.npy")
+    soft_label = np.load(cfg.path.soft_label)
 
     oof_train, test_preds = train(
         args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values, soft_label[:, 0],
@@ -151,7 +149,7 @@ def main(args):
 
     print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
     sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
-    sub_df.to_csv(settings["PROCESSED_DATA_DIR"] + "sub.csv", index=False)
+    sub_df.to_csv("./sub.csv", index=False)
 
 
 if __name__ == "__main__":

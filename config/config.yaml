@@ -1,4 +1,12 @@
-db:
-  driver: mysql
-  user: omry
-  pass: secret
+dir:
+  external: "./data/external/"
+  interim: "./data/interim/"
+  processed: "./data/processed/"
+  raw: "./data/raw/"
+  models: "./models/"
+
+path:
+  train: "./data/raw/train.csv"
+  test: "./data/raw/test.csv"
+  submission: "./data/raw/sample_submission.csv"
+  soft_label: "./data/processed/soft_label.npy"
