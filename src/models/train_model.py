@@ -66,17 +66,19 @@ def compute_metrics(p: EvalPrediction):
     }
 
 
+
 def train(train_df, soft_lable, cfg):
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
     X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(X_tra_val, y_tra_val)):
-
         train_data = train_df.iloc[train_index]
-        vlaid_data = train_df.iloc[valid_index]
+        valid_data = train_df.iloc[valid_index]
         train_dataset = HateSpeechDataset(train_data, tokenizer)
         valid_dataset = HateSpeechDataset(valid_data, tokenizer)
+
+        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
 
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
@@ -98,8 +100,6 @@ def train(train_df, soft_lable, cfg):
             report_to=args.report_to,
         )
 
-        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
-
         trainer = CustomTrainer(
             model=model,
             args=training_args,
@@ -117,6 +117,8 @@ def train(train_df, soft_lable, cfg):
         trainer.save_model()
 
 
+# soft_labelをtrain_dfと結合
+# make_dataset内で[s_label, h_label]に直してreturn
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
 def main(cfg):
     seed_everything(args.seed)
