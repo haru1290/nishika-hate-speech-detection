@@ -71,19 +71,15 @@ def train(train_df, soft_lable, cfg):
     X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
-    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_tra_val, y_tra_val)): 
-        X_tra = [X_tra_val[i] for i in tra_idx]
-        X_val = [X_tra_val[i] for i in tra_idx]
-        y_tra = [[y_tra_val[i], soft_lable[i]] for i in tra_idx]
-        y_val = [[y_tra_val[i], soft_lable[i]] for i in val_idx]
+    for fold_index, (train_index, valid_index) in enumerate(skf.split(X_tra_val, y_tra_val)):
 
-        train_data = 
-        vlaid_data = 
-        train_dataset = HateSpeechDataset(X_tra, y_tra, tokenizer)
-        valid_dataset = HateSpeechDataset(X_val, y_val, tokenizer)
+        train_data = train_df.iloc[train_index]
+        vlaid_data = train_df.iloc[valid_index]
+        train_dataset = HateSpeechDataset(train_data, tokenizer)
+        valid_dataset = HateSpeechDataset(valid_data, tokenizer)
 
         training_args = TrainingArguments(
-            output_dir=f"./models/{args.run_name}/kfold_{str(fold_idx)}/",
+            output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
             evaluation_strategy="epoch",
             per_device_train_batch_size=cfg.training.batch_size,
             per_device_eval_batch_size=cfg.training.batch_size,
