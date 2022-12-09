@@ -12,4 +12,7 @@ path:
   soft_label: "./data/processed/soft_label.npy"
 
 training:
-  
+  batch_size: 16
+  learning_rate: 3e-5
+  epoch: 100
+  patience: 3

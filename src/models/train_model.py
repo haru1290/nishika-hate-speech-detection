@@ -84,8 +84,8 @@ def train(X_train, y_train, soft_lable, cfg):
 
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{str(fold_idx)}/",
-            overwrite_output_dir=args.overwrite_output_dir,
-            evaluation_strategy=args.evaluation_strategy,
+            overwrite_output_dir=True,
+            evaluation_strategy="epoch",
             per_device_train_batch_size=args.batch_size,
             per_device_eval_batch_size=args.batch_size,
             learning_rate=args.learning_rate,
