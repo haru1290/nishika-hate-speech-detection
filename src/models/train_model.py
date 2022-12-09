@@ -78,6 +78,8 @@ def train(train_df, soft_lable, cfg):
         train_dataset = HateSpeechDataset(train_data, tokenizer)
         valid_dataset = HateSpeechDataset(valid_data, tokenizer)
 
+        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
+
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
             evaluation_strategy="epoch",
@@ -97,8 +99,6 @@ def train(train_df, soft_lable, cfg):
             label_smoothing_factor=args.label_smoothing_factor,
             report_to=args.report_to,
         )
-
-        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
 
         trainer = CustomTrainer(
             model=model,
