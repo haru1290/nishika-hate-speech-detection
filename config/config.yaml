@@ -10,3 +10,6 @@ path:
   test: "./data/raw/test.csv"
   submission: "./data/raw/sample_submission.csv"
   soft_label: "./data/processed/soft_label.npy"
+
+training:
+  

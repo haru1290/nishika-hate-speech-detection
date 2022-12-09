@@ -66,16 +66,22 @@ def compute_metrics(p: EvalPrediction):
     }
 
 
-def train(X_train, y_train, soft_lable, cfg):
+def train(args, X_tra_val, y_tra_val, X_test, soft_tra_val):
+    test_preds = []
+    oof_train = np.zeros((len(X_tra_val),))
+
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    X_train = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train]
+
+    X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_tra_val]
+    X_test = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_test]
+    test_dataset = HateSpeechDataset(X_test)
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
-    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_train, y_train)):
-        X_tra = [X_train[i] for i in tra_idx]
-        X_val = [X_train[i] for i in val_idx]
-        y_tra = [[y_train[i], soft_lable[i]] for i in tra_idx]
-        y_val = [[y_train[i], soft_lable[i]] for i in val_idx]
+    for fold_idx, (tra_idx, val_idx) in enumerate(skf.split(X_tra_val, y_tra_val)):
+        X_tra = [X_tra_val[i] for i in tra_idx]
+        X_val = [X_tra_val[i] for i in val_idx]
+        y_tra = [[y_tra_val[i], soft_tra_val[i]] for i in tra_idx]
+        y_val = [[y_tra_val[i], soft_tra_val[i]] for i in val_idx]
 
         training_dataset = HateSpeechDataset(X_tra, y_tra)
         validation_dataset = HateSpeechDataset(X_val, y_val)
@@ -105,7 +111,6 @@ def train(X_train, y_train, soft_lable, cfg):
             label_smoothing_factor=args.label_smoothing_factor,
             report_to=args.report_to,
         )
-
         trainer = CustomTrainer(
             model=model,
             args=training_args,
@@ -117,10 +122,14 @@ def train(X_train, y_train, soft_lable, cfg):
                 early_stopping_patience=args.early_stopping_patience,
             )],
         )
-
         trainer.train()
         trainer.save_state()
         trainer.save_model()
+
+        oof_train[val_idx] = np.argmax(trainer.predict(validation_dataset).predictions, axis=1)
+        test_preds.append(trainer.predict(test_dataset).predictions)
+
+    return oof_train, np.array(test_preds)
 
 
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
@@ -134,12 +143,13 @@ def main(cfg):
     # soft_label
     soft_label = np.load(cfg.path.soft_label)
 
-    train(
-        tra_val_df["text"].values,
-        tra_val_df["label"].values,
-        soft_label[:, 0],
-        cfg,
+    oof_train, test_preds = train(
+        args, tra_val_df["text"].values, tra_val_df["label"].values, test_df["text"].values, soft_label[:, 0],
     )
+
+    print(f1_score(tra_val_df["label"].values.tolist(), oof_train))
+    sub_df["label"] = np.argmax(np.mean(test_preds, axis=0), axis=1)
+    sub_df.to_csv("./sub.csv", index=False)
 
 
 if __name__ == "__main__":
