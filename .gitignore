@@ -130,3 +130,6 @@ dmypy.json
 
 # Models
 kfold_*
+
+# Hydra
+outputs/
