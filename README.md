@@ -1,6 +1,6 @@
 # Nishika - Hate Speech Detection
 
-LB: 0.763（2位）, PB: 0.750（5１位）
+LB: 0.763（2位）, PB: 0.750（5位）
 
 ## Project Structure
 
