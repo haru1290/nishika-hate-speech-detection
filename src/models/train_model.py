@@ -7,11 +7,13 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          EarlyStoppingCallback, EvalPrediction, Trainer,
-                          TrainingArguments)
+from transformers import (
+    AutoModelForSequenceClassification, AutoTokenizer, EarlyStoppingCallback,
+    EvalPrediction, Trainer, TrainingArguments,
+)
 
 # from src.data.rmake_dataset import *
 
