@@ -1,18 +1,18 @@
+import argparse
 import os
 import random
+
+import hydra
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import argparse
-import hydra
-
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import (
-    AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
-    Trainer, TrainingArguments, EarlyStoppingCallback,
-)
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          EarlyStoppingCallback, EvalPrediction, Trainer,
+                          TrainingArguments)
+
 from ..data.rmake_dataset import *
 
 

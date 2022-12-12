@@ -1,19 +1,19 @@
+import argparse
 import os
 import random
+
+import hydra
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-import argparse
-import hydra
-
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
-from transformers import (
-    AutoTokenizer, EvalPrediction, AutoModelForSequenceClassification,
-    Trainer, TrainingArguments, EarlyStoppingCallback,
-)
-from ..data.rmake_dataset import *
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          EarlyStoppingCallback, EvalPrediction, Trainer,
+                          TrainingArguments)
+
+# from src.data.rmake_dataset import *
 
 
 class CustomLoss(nn.Module):
@@ -67,7 +67,7 @@ def compute_metrics(p: EvalPrediction):
 
 
 # X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
-def train(train_df, soft_lable, cfg):
+def train(train_df, cfg):
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
@@ -128,6 +128,10 @@ def main(cfg):
 
     # soft label data
     soft_label = np.load(cfg.path.soft_label)
+    train_df["soft_label"] = soft_label
+
+    print(train_df["soft_label"])
+    return
 
     train(
         train_df,
