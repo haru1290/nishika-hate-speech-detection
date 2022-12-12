@@ -38,8 +38,8 @@
 
 ## Requirements
 
-- Python==3.8.5
-- Pytorch==1.13.0
+- Python 3.8.5
+- Pytorch 1.13.0
 
 ## Usage
 
