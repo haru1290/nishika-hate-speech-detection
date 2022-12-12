@@ -8,7 +8,7 @@
 ├── Makefile
 ├── README.md
 ├── config
-│   └──main.yaml
+│   └── config.yaml
 ├── data
 │   ├── external
 │   ├── interim
@@ -18,13 +18,9 @@
 │       ├── sample_submission.csv
 │       ├── test.csv
 │       └── train.csv
-├── docs
 ├── environment.yml
 ├── models
 ├── notebooks
-├── references
-├── reports
-│   └── figures
 └── src
     ├── __init__.py
     ├── data
@@ -33,6 +29,7 @@
     │   └── build_features.py
     ├── models
     │   ├── predict_model.py
+    │   ├── tmp.py
     │   └── train_model.py
     └── visualization
         └── visualize.py
