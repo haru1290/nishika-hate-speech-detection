@@ -1,5 +1,7 @@
 # Nishika - Hate Speech Detection
 
+
+
 ## Project Structure
 
 ```
@@ -29,7 +31,6 @@
     │   └── build_features.py
     ├── models
     │   ├── predict_model.py
-    │   ├── tmp.py
     │   └── train_model.py
     └── visualization
         └── visualize.py
