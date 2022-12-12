@@ -38,10 +38,16 @@ LB: 0.763（2位）, PB: 0.750（5１位）
 
 ## Requirements
 
+- Anaconda 1.7.2
 - Python 3.8.5
 - Pytorch 1.13.0
 
 ## Usage
+
+```
+# 
+
+```
 
 ## 12/13までにやること
 
