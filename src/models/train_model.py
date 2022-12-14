@@ -1,51 +1,48 @@
 import argparse
 import os
 import random
-
 import hydra
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
 from transformers import (
     AutoModelForSequenceClassification, AutoTokenizer, EarlyStoppingCallback,
     EvalPrediction, Trainer, TrainingArguments,
 )
-
 # from src.data.rmake_dataset import *
 
 
-class CustomLoss(nn.Module):
-    def __init__(self, alpha=None):
-        super(CustomLoss, self).__init__()
-        self.alpha = alpha
-        self.ce_loss = nn.CrossEntropyLoss(reduction="none")
-        self.mse_loss = nn.MSELoss(reduction="none")
+# class CustomLoss(nn.Module):
+#     def __init__(self, alpha=None):
+#         super(CustomLoss, self).__init__()
+#         self.alpha = alpha
+#         self.ce_loss = nn.CrossEntropyLoss(reduction="none")
+#         self.mse_loss = nn.MSELoss(reduction="none")
     
-    def forward(self, outputs, targets):
-        h_label = targets.T[0].to(torch.int64)
-        s_label = targets.T[1].float()
-        s_label = torch.stack([s_label,1 - s_label], dim=1)
-        s_loss = self.mse_loss(outputs,s_label).mean()
-        s_loss.mul_(self.alpha)
-        s_loss.div_(2)
-        h_loss = self.ce_loss(outputs, h_label).mean()
-        loss = (s_loss + h_loss).float()
-        loss /= 2*(1+self.alpha)**2
-        return loss
+#     def forward(self, outputs, targets):
+#         h_label = targets.T[0].to(torch.int64)
+#         s_label = targets.T[1].float()
+#         s_label = torch.stack([s_label,1 - s_label], dim=1)
+#         s_loss = self.mse_loss(outputs,s_label).mean()
+#         s_loss.mul_(self.alpha)
+#         s_loss.div_(2)
+#         h_loss = self.ce_loss(outputs, h_label).mean()
+#         loss = (s_loss + h_loss).float()
+#         loss /= 2*(1+self.alpha)**2
+#         return loss
 
 
-class CustomTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        labels = inputs.get("labels")
-        outputs = model(**inputs)
-        logits = outputs.get("logits")
-        loss_fct = CustomLoss(alpha=1.0)
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
-        return (loss, outputs) if return_outputs else loss
+# class CustomTrainer(Trainer):
+#     def compute_loss(self, model, inputs, return_outputs=False):
+#         labels = inputs.get("labels")
+#         outputs = model(**inputs)
+#         logits = outputs.get("logits")
+#         loss_fct = CustomLoss(alpha=1.0)
+#         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
+#         return (loss, outputs) if return_outputs else loss
 
 
 def seed_everything(seed: int):
@@ -102,7 +99,8 @@ def train(train_df, cfg):
             report_to=args.report_to,
         )
 
-        trainer = CustomTrainer(
+        # trainer = CustomTrainer(
+        trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
