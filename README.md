@@ -20,9 +20,12 @@ LB: 0.763（2位）, PB: 0.750（5位）
 │       ├── sample_submission.csv
 │       ├── test.csv
 │       └── train.csv
+├── docs
 ├── environment.yml
 ├── models
 ├── notebooks
+├── reports
+│   └── figures
 └── src
     ├── __init__.py
     ├── data
@@ -30,7 +33,9 @@ LB: 0.763（2位）, PB: 0.750（5位）
     ├── features
     │   └── build_features.py
     ├── models
+    │   ├── dataset.py
     │   ├── predict_model.py
+    │   ├── tmp.py
     │   └── train_model.py
     └── visualization
         └── visualize.py
