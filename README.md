@@ -2,7 +2,7 @@
 
 LB: 0.763（2位）, PB: 0.750（5位）
 
-## Project Structure
+## Directory Structure
 
 ```
 ./nishika-hate-speech-detection
