@@ -56,4 +56,3 @@ LB: 0.763（2位）, PB: 0.750（5位）
 - generate_labelをbuild_features.pyに追加
 - リファクタリング
 - READMEを書く
-- アドベントカレンダーを書く
