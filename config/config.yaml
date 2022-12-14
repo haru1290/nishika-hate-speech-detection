@@ -1,3 +1,10 @@
+dir:
+  external: "./data/external/"
+  interim: "./data/interim/"
+  processed: "./data/processed/"
+  raw: "./data/raw/"
+  models: "./models/"
+
 path:
   train: "./data/raw/train.csv"
   test: "./data/raw/test.csv"
