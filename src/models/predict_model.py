@@ -1,4 +1,4 @@
-# 予測スクリプト
+# 予測
 
 import hydra
 import pandas as pd

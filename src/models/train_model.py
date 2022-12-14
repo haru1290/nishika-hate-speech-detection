@@ -1,3 +1,5 @@
+# 学習
+
 import argparse
 import os
 import random

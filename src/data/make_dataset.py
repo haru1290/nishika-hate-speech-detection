@@ -1,4 +1,5 @@
-# データのダウンロードを行う
+# データのダウンロード
+
 import pandas as pd
 from torch.utils.data import Dataset
 
