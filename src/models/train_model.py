@@ -8,13 +8,13 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+from datasets import Dataset
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
 from transformers import (
     AutoModelForSequenceClassification, AutoTokenizer, EarlyStoppingCallback,
     EvalPrediction, Trainer, TrainingArguments,
 )
-# from src.data.rmake_dataset import *
 
 
 # class CustomLoss(nn.Module):
@@ -76,8 +76,12 @@ def train(train_df, cfg):
 
         train_data = train_df.iloc[train_index]
         valid_data = train_df.iloc[valid_index]
-        train_dataset = HateSpeechDataset(train_data, tokenizer)
-        valid_dataset = HateSpeechDataset(valid_data, tokenizer)
+        train_dataset = Dataset.from_pandas(train_data)
+        valid_dataset = Dataset.from_pandas(valid_data)
+
+        print(train_dataset[0])
+
+        return
 
         model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
 
@@ -131,9 +135,6 @@ def main(cfg):
     # soft label data
     soft_label = np.load(cfg.path.soft_label)
     train_df["soft_label"] = soft_label
-
-    print(train_df["soft_label"])
-    return
 
     train(
         train_df,
