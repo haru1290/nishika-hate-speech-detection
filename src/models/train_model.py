@@ -1,5 +1,3 @@
-# 学習
-
 import argparse
 import os
 import random
@@ -12,8 +10,12 @@ from datasets import Dataset
 from sklearn.metrics import f1_score
 from sklearn.model_selection import StratifiedKFold
 from transformers import (
-    AutoModelForSequenceClassification, AutoTokenizer, EarlyStoppingCallback,
-    EvalPrediction, Trainer, TrainingArguments,
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    EarlyStoppingCallback,
+    EvalPrediction,
+    Trainer,
+    TrainingArguments,
 )
 
 
@@ -69,21 +71,26 @@ def compute_metrics(p: EvalPrediction):
 
 # X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 def train(train_df, cfg):
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    tokenizer = AutoTokenizer.from_pretrained("studio-ousia/luke-japanese-large")
+    tokenizer_function = lambda dataset: tokenizer(
+        dataset["text"],
+        padding="max_length",
+        max_length=256,
+        truncation=True,
+    )
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(train_df["text"].values, train_df["label"].values)):
-
         train_data = train_df.iloc[train_index]
         valid_data = train_df.iloc[valid_index]
+
         train_dataset = Dataset.from_pandas(train_data)
         valid_dataset = Dataset.from_pandas(valid_data)
 
-        print(train_dataset[0])
+        train_tokenized_dataset = train_dataset.map(tokenizer_function, batched=True)
+        valid_tokenized_dataset = valid_dataset.map(tokenizer_function, batched=True)
 
-        return
-
-        model = AutoModelForSequenceClassification.from_pretrained(args.model_name)
+        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
 
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
@@ -105,7 +112,6 @@ def train(train_df, cfg):
             report_to=args.report_to,
         )
 
-        # trainer = CustomTrainer(
         trainer = Trainer(
             model=model,
             args=training_args,
@@ -133,12 +139,12 @@ def main(cfg):
     train_df = pd.read_csv(cfg.path.train)
 
     # soft label data
-    soft_label = np.load(cfg.path.soft_label)
-    train_df["soft_label"] = soft_label
+    # soft_label = np.load(cfg.path.soft_label)
+    # train_df["soft_label"] = soft_label
 
     train(
         train_df,
-        soft_label[:, 0],
+        # soft_label[:, 0],
         cfg,
     )
 
@@ -160,8 +166,8 @@ if __name__ == "__main__":
     parser.add_argument("--report_to", type=str, default="none")
     parser.add_argument("--early_stopping_patience", type=int, default=3)
 
-    parser.add_argument("--model_name", type=str, default="cl-tohoku/bert-base-japanese-whole-word-masking")
-    parser.add_argument("--run_name", type=str, default="bert-base-japanese")
+    parser.add_argument("--model_name", type=str, default="studio-ousia/luke-japanese-large")
+    parser.add_argument("--run_name", type=str, default="luke-large-japanese")
     parser.add_argument("--k_fold", type=int, default=5)
     parser.add_argument("--max_length", type=int, default=-1)
     parser.add_argument("--batch_size", type=int, default=8)
