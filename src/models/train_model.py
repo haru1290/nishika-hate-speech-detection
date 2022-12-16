@@ -72,7 +72,7 @@ def compute_metrics(p: EvalPrediction):
 def train(train_df, cfg):
     tokenizer = AutoTokenizer.from_pretrained("studio-ousia/luke-japanese-large")
     tokenized_function = lambda dataset: tokenizer(
-        dataset["text"],
+        text=dataset["text"],
         padding="max_length",
         max_length=256,
         truncation=True,
