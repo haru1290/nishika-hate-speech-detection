@@ -81,7 +81,6 @@ def train(train_df, cfg):
 
     skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(train_df["text"].values, train_df["label"].values)):
-        
         train_data = train_df.iloc[train_index]
         train_dataset = Dataset.from_pandas(train_data)
         train_dataset = train_dataset.map(tokenizer_function, batched=True)
