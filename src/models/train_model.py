@@ -69,7 +69,6 @@ def compute_metrics(p: EvalPrediction):
     }
 
 
-# X_tra_val = [tokenizer(text, padding="max_length", max_length=args.max_length, truncation=True) for text in X_train_valid]
 def train(train_df, cfg):
     tokenizer = AutoTokenizer.from_pretrained("studio-ousia/luke-japanese-large")
     tokenized_function = lambda dataset: tokenizer(
