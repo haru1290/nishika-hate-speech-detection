@@ -86,23 +86,23 @@ def train(train_df, cfg):
         valid_dataset = Dataset.from_pandas(valid_data).map(tokenized_function, batched=True)
 
         training_args = TrainingArguments(
-            output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
+            output_dir=f"./models/kfold_{fold_index}/",
             evaluation_strategy="epoch",
-            per_device_train_batch_size=cfg.training.batch_size,
-            per_device_eval_batch_size=cfg.training.batch_size,
-            learning_rate=cfg.training.learning_rate,
-            num_train_epochs=cfg.training.epoch,
+            per_device_train_batch_size=16,
+            per_device_eval_batch_size=16,
+            learning_rate=3e-5,
+            num_train_epochs=100,
             save_strategy="epoch",
-            save_steps=args.steps,
-            save_total_limit=args.save_total_limit,
-            seed=args.seed,
-            data_seed=args.seed,
-            fp16=args.fp16,
-            remove_unused_columns=args.remove_unused_columns,
-            load_best_model_at_end=args.load_best_model_at_end,
-            metric_for_best_model=args.metric_for_best_model,
-            label_smoothing_factor=args.label_smoothing_factor,
-            report_to=args.report_to,
+            save_steps=1e6,
+            save_total_limit=1,
+            seed=42,
+            data_seed=42,
+            fp16=True,
+            remove_unused_columns=False,
+            load_best_model_at_end=True,
+            metric_for_best_model="f1_score",
+            label_smoothing_factor=0.2,
+            report_to="none",
         )
 
         model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
@@ -114,7 +114,7 @@ def train(train_df, cfg):
             tokenizer=tokenizer,
             compute_metrics=compute_metrics,
             callbacks=[
-                EarlyStoppingCallback(early_stopping_patience=args.early_stopping_patience)
+                EarlyStoppingCallback(early_stopping_patience=3)
             ],
         )
 
