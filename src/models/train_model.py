@@ -86,8 +86,6 @@ def train(train_df, cfg):
         train_dataset = Dataset.from_pandas(train_data).map(tokenized_function, batched=True)
         valid_dataset = Dataset.from_pandas(valid_data).map(tokenized_function, batched=True)
 
-        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
-
         training_args = TrainingArguments(
             output_dir=f"./models/{args.run_name}/kfold_{fold_index}/",
             evaluation_strategy="epoch",
@@ -108,6 +106,7 @@ def train(train_df, cfg):
             report_to=args.report_to,
         )
 
+        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
         trainer = Trainer(
             model=model,
             args=training_args,
