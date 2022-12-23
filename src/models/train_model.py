@@ -136,7 +136,7 @@ def seed_everything(seed: int):
 
 # soft_labelをtrain_dfと結合
 # make_dataset内で[s_label, h_label]に直してreturn
-@hydra.main(version_base=None, config_path="../../config", config_name="config")
+@hydra.main(version_base=None, config_path="../../config", config_name="main")
 def main(cfg):
     seed_everything(args.seed)
 
