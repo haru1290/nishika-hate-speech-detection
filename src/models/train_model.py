@@ -136,6 +136,7 @@ def main(cfg):
     # soft label data
     soft_label = np.load(cfg.path.soft_label)
     train_df["soft_label"] = soft_label[:, 0]
+    print(soft_label[:, 0])
 
     print(train_df)
     return
