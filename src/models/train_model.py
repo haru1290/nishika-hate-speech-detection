@@ -39,25 +39,15 @@ from transformers import (
 #         return loss
 
 
-# class CustomTrainer(Trainer):
-#     def compute_loss(self, model, inputs, return_outputs=False):
-#         labels = inputs.get("labels")
-#         outputs = model(**inputs)
-#         logits = outputs.get("logits")
-#         loss_fct = CustomLoss(alpha=1.0)
-#         loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
-#         return (loss, outputs) if return_outputs else loss
-
-
-def seed_everything(seed: int):
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.benchmark = True
-    torch.backends.cudnn.deterministic = True
+# ここでソフトラベルを受け取る
+class CustomTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        outputs = model(**inputs)
+        logits = outputs.get("logits")
+        loss_fct = CustomLoss(alpha=1.0)
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
+        return (loss, outputs) if return_outputs else loss
 
 
 def compute_metrics(p: EvalPrediction):
@@ -87,6 +77,8 @@ def train(train_df):
         train_dataset = Dataset.from_pandas(train_data).map(tokenizer_function, batched=True)
         valid_dataset = Dataset.from_pandas(valid_data).map(tokenizer_function, batched=True)
 
+        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
+
         training_args = TrainingArguments(
             output_dir=f"./models/kfold_{fold_index}/",
             evaluation_strategy="epoch",
@@ -105,9 +97,7 @@ def train(train_df):
             label_smoothing_factor=0.2,
             report_to="none",
         )
-
-        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
-        trainer = Trainer(
+        trainer = CustomTrainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
@@ -118,10 +108,20 @@ def train(train_df):
                 EarlyStoppingCallback(early_stopping_patience=3)
             ],
         )
-
         trainer.train()
         trainer.save_state()
         trainer.save_model()
+
+
+def seed_everything(seed: int):
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
 
 
 # soft_labelをtrain_dfと結合
@@ -134,16 +134,14 @@ def main(cfg):
     train_df = pd.read_csv(cfg.path.train)
 
     # soft label data
-    # soft_label = np.load(cfg.path.soft_label)
-    # train_df["soft_label"] = soft_label[:, 0]
+    soft_label = np.load(cfg.path.soft_label)
+    train_df["soft_label"] = soft_label[:, 0]
     # print(soft_label[:, 0])
 
     # print(train_df)
     # return
 
-    train(
-        train_df,
-    )
+    train(train_df)
 
 
 if __name__ == "__main__":
