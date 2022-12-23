@@ -1,5 +1,5 @@
 default:
-	export CUDA_VISIBLE_DEVICES="0,1"
+	export CUDA_VISIBLE_DEVICES="1,2,3"
 	python src/train.py \
 		--model_name studio-ousia/luke-japanese-large \
 		--run_name luke-large-japanese \
