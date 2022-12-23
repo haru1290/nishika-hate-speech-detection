@@ -12,8 +12,7 @@ LB: 0.763（2位）, PB: 0.750（5位）
 ├── config
 │   └── config.yaml
 ├── data
-│   ├── external
-│   ├── interim
+│   ├── final
 │   ├── processed
 │   └── raw
 │       ├── data_explanation.xlsx
@@ -32,13 +31,9 @@ LB: 0.763（2位）, PB: 0.750（5位）
     │   └── make_dataset.py
     ├── features
     │   └── build_features.py
-    ├── models
-    │   ├── dataset.py
-    │   ├── predict_model.py
-    │   ├── tmp.py
-    │   └── train_model.py
-    └── visualization
-        └── visualize.py
+    └── models
+    　   ├── predict_model.py
+    　   └── train_model.py
 ```
 
 ## Requirements
