@@ -78,12 +78,14 @@ def train(train_df, cfg):
         truncation=True,
     )
 
-    skf = StratifiedKFold(n_splits=args.k_fold, shuffle=True, random_state=args.seed)
+    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(train_df["text"].values, train_df["label"].values)):
         train_data = train_df.iloc[train_index]
         valid_data = train_df.iloc[valid_index]
         train_dataset = Dataset.from_pandas(train_data).map(tokenizer_function, batched=True)
         valid_dataset = Dataset.from_pandas(valid_data).map(tokenizer_function, batched=True)
+
+        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
 
         training_args = TrainingArguments(
             output_dir=f"./models/kfold_{fold_index}/",
@@ -105,7 +107,6 @@ def train(train_df, cfg):
             report_to="none",
         )
 
-        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
         trainer = Trainer(
             model=model,
             args=training_args,
