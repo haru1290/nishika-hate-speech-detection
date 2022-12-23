@@ -42,11 +42,20 @@ from transformers import (
 # ここでソフトラベルを受け取る
 class CustomTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
+        input_ids = inputs.get("input_ids")
+        attention_mask = inputs.get("attention_mask")
         labels = inputs.get("labels")
-        outputs = model(**inputs)
+        # outputs = model(**inputs)
+        outputs = model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+        )
         logits = outputs.get("logits")
-        loss_fct = CustomLoss(alpha=1.0)
-        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
+        # loss_fct = CustomLoss(alpha=1.0)
+        loss_fct = nn.CrossEntropyLoss()
+        # loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels)
+        loss = loss_fct(logits.view(-1, self.model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
 
@@ -92,6 +101,7 @@ def train(train_df):
             seed=42,
             data_seed=42,
             fp16=True,
+            label_names=["labels", "soft_label"],
             load_best_model_at_end=True,
             metric_for_best_model="f1_score",
             label_smoothing_factor=0.2,
