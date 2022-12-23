@@ -134,12 +134,14 @@ def main(cfg):
     train_df = pd.read_csv(cfg.path.train)
 
     # soft label data
-    # soft_label = np.load(cfg.path.soft_label)
-    # train_df["soft_label"] = soft_label
+    soft_label = np.load(cfg.path.soft_label)
+    train_df["soft_label"] = soft_label[:, 0]
+
+    print(train_df)
+    return
 
     train(
         train_df,
-        # soft_label[:, 0],
     )
 
 
