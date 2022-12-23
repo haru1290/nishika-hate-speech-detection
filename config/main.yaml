@@ -1,3 +1,11 @@
+raw:
+  train:
+    path: "./data/raw/train.csv"
+  test:
+    path: "./data/raw/test.csv"
+  submission:
+    path: "./data/raw/sample_submission.csv"
+
 dir:
   external: "./data/external/"
   interim: "./data/interim/"
@@ -6,9 +14,9 @@ dir:
   models: "./models/"
 
 path:
-  train: "./data/raw/train.csv"
-  test: "./data/raw/test.csv"
-  submission: "./data/raw/sample_submission.csv"
+  train: 
+  test: 
+  submission: 
   soft_label: "./data/processed/soft_label.npy"
 
 training:
