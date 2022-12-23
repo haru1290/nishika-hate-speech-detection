@@ -63,13 +63,14 @@ def seed_everything(seed: int):
 def compute_metrics(p: EvalPrediction):
     preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
     preds = np.argmax(preds, axis=1)
-    f1 = f1_score(p.label_ids.T[0], preds)
+    # f1 = f1_score(p.label_ids.T[0], preds)
+    f1 = f1_score(p.label_ids, preds)
     return {
         "f1_score": f1,
     }
 
 
-def train(train_df, cfg):
+def train(train_df):
     tokenizer = AutoTokenizer.from_pretrained("studio-ousia/luke-japanese-large")
     tokenizer_function = lambda dataset: tokenizer(
         text=dataset["text"],
@@ -80,12 +81,11 @@ def train(train_df, cfg):
 
     skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
     for fold_index, (train_index, valid_index) in enumerate(skf.split(train_df["text"].values, train_df["label"].values)):
+        
         train_data = train_df.iloc[train_index]
         valid_data = train_df.iloc[valid_index]
         train_dataset = Dataset.from_pandas(train_data).map(tokenizer_function, batched=True)
         valid_dataset = Dataset.from_pandas(valid_data).map(tokenizer_function, batched=True)
-
-        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
 
         training_args = TrainingArguments(
             output_dir=f"./models/kfold_{fold_index}/",
@@ -100,13 +100,13 @@ def train(train_df, cfg):
             seed=42,
             data_seed=42,
             fp16=True,
-            remove_unused_columns=False,
             load_best_model_at_end=True,
             metric_for_best_model="f1_score",
             label_smoothing_factor=0.2,
             report_to="none",
         )
 
+        model = AutoModelForSequenceClassification.from_pretrained("studio-ousia/luke-japanese-large")
         trainer = Trainer(
             model=model,
             args=training_args,
@@ -140,7 +140,6 @@ def main(cfg):
     train(
         train_df,
         # soft_label[:, 0],
-        cfg,
     )
 
 
