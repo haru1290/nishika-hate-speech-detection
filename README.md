@@ -1,6 +1,6 @@
 # Nishika - Hate Speech Detection
 
-LB: 0.763（2nd）, PB: 0.750（5th）
+LB: 0.763（2nd）, PB: 0.750（4th）
 
 ## Directory Structure
 
